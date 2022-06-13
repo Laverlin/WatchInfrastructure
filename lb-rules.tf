@@ -42,12 +42,16 @@ resource "azurerm_lb_rule" "lb-udp4500" {
   depends_on = [azurerm_lb_backend_address_pool.addr_pool, azurerm_lb.lb]
 }
 
-// NAT
+########################################
+#          NAT Rules
+########################################
+
+// SSH Master
 //
 resource "azurerm_lb_nat_rule" "ssh_rule_master" {
   resource_group_name            = azurerm_resource_group.rg.name
   loadbalancer_id                = azurerm_lb.lb.id
-  name                           = "SSH-01"
+  name                           = "SSH-Master"
   protocol                       = "Tcp"
   frontend_port                  = 50221
   backend_port                   = 22
@@ -55,10 +59,19 @@ resource "azurerm_lb_nat_rule" "ssh_rule_master" {
   depends_on = [azurerm_lb.lb]
 }
 
+resource "azurerm_network_interface_nat_rule_association" "nic_nat_master" {
+  network_interface_id  = azurerm_network_interface.nic[0].id
+  ip_configuration_name = azurerm_network_interface.nic[0].ip_configuration[0].name 
+  nat_rule_id           = azurerm_lb_nat_rule.ssh_rule_master.id
+    depends_on = [azurerm_network_interface.nic]
+}
+
+// SSH Worker
+//
 resource "azurerm_lb_nat_rule" "ssh_rule_worker" {
   resource_group_name            = azurerm_resource_group.rg.name
   loadbalancer_id                = azurerm_lb.lb.id
-  name                           = "SSH-02"
+  name                           = "SSH-Worker"
   protocol                       = "Tcp"
   frontend_port                  = 50222
   backend_port                   = 22
@@ -66,19 +79,29 @@ resource "azurerm_lb_nat_rule" "ssh_rule_worker" {
   depends_on = [azurerm_lb.lb]
 }
 
-
-// NAT assotiation
-//
-resource "azurerm_network_interface_nat_rule_association" "nic_nat_master" {
-  network_interface_id  = azurerm_network_interface.nic[0].id
-  ip_configuration_name = azurerm_network_interface.nic[0].ip_configuration[0].name //"nic-config-${var.project_name}"
-  nat_rule_id           = azurerm_lb_nat_rule.ssh_rule_master.id
+resource "azurerm_network_interface_nat_rule_association" "nic_nat_worker" {
+  network_interface_id  = azurerm_network_interface.nic[1].id
+  ip_configuration_name = azurerm_network_interface.nic[1].ip_configuration[0].name 
+  nat_rule_id           = azurerm_lb_nat_rule.ssh_rule_worker.id
     depends_on = [azurerm_network_interface.nic]
 }
 
-resource "azurerm_network_interface_nat_rule_association" "nic_nat_worker" {
-  network_interface_id  = azurerm_network_interface.nic[1].id
-  ip_configuration_name = azurerm_network_interface.nic[1].ip_configuration[0].name //"nic-config-${var.project_name}"
-  nat_rule_id           = azurerm_lb_nat_rule.ssh_rule_worker.id
+/// KubeCtl
+///
+resource "azurerm_lb_nat_rule" "kubectl_rule" {
+  resource_group_name            = azurerm_resource_group.rg.name
+  loadbalancer_id                = azurerm_lb.lb.id
+  name                           = "KubeCtl"
+  protocol                       = "Tcp"
+  frontend_port                  = 6443
+  backend_port                   = 6443
+  frontend_ip_configuration_name = "PublicIPAddress"
+  depends_on = [azurerm_lb.lb]
+}
+
+resource "azurerm_network_interface_nat_rule_association" "nic_nat_kubectl" {
+  network_interface_id  = azurerm_network_interface.nic[0].id
+  ip_configuration_name = azurerm_network_interface.nic[0].ip_configuration[0].name 
+  nat_rule_id           = azurerm_lb_nat_rule.kubectl_rule.id
     depends_on = [azurerm_network_interface.nic]
 }
