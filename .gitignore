@@ -5,6 +5,7 @@
 *.tfstate
 *.tfstate.*
 **/secret.*
+**/.secret*
 
 # Crash log files
 crash.log

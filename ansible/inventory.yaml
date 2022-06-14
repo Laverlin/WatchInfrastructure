@@ -1,0 +1,10 @@
+all:
+  hosts:
+    master:
+      ansible_port: 50221
+    worker:
+      ansible_port: 50222
+  vars:
+    ansible_host: kuber.ivan-b.com
+    ansible_user: IBUser
+    ansible_ssh_private_key_file: ./../.secret/AzureKeyU-Hub-tf.pem

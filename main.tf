@@ -102,6 +102,13 @@ resource "azurerm_subnet" "subnet" {
     address_prefixes       = ["10.12.0.0/24"]
 }
 
+// Connect the security group to the subnet
+//
+resource "azurerm_subnet_network_security_group_association" "nsg_sub_ass" {
+  subnet_id                 = azurerm_subnet.subnet.id
+  network_security_group_id = azurerm_network_security_group.nsg.id
+}
+
 // Public IP
 //
 resource "azurerm_public_ip" "public_ip" {
@@ -115,7 +122,7 @@ resource "azurerm_public_ip" "public_ip" {
     }
 }
 
-// Network Interface Card.
+// Network Interface Cards
 //
 resource "azurerm_network_interface" "nic" {
     count                       = var.node_count
@@ -134,6 +141,8 @@ resource "azurerm_network_interface" "nic" {
     }
 }
 
+// Load Balancer
+//
 resource "azurerm_lb" "lb" {
   name                = "${var.project_name}-lb"
   location            = var.location
@@ -145,11 +154,15 @@ resource "azurerm_lb" "lb" {
   }
 }
 
+// Create backend address pool for the LoadBalancer
+//
 resource "azurerm_lb_backend_address_pool" "addr_pool" {
   loadbalancer_id     = azurerm_lb.lb.id
   name                = "accpool"
 }
 
+// Attach all interface card to the lb via backend address pool
+//
 resource "azurerm_network_interface_backend_address_pool_association" "nic_pool" {
   count = var.node_count
   network_interface_id    = azurerm_network_interface.nic[count.index].id
@@ -157,21 +170,20 @@ resource "azurerm_network_interface_backend_address_pool_association" "nic_pool"
   backend_address_pool_id = azurerm_lb_backend_address_pool.addr_pool.id
 }
 
-// Connect the security group to the subnet
+// Create availability set as basic Load Balancer can work only with VMs in the same availability set
 //
-resource "azurerm_subnet_network_security_group_association" "nsg_sub_ass" {
-  subnet_id                 = azurerm_subnet.subnet.id
-  network_security_group_id = azurerm_network_security_group.nsg.id
-}
-
- resource "azurerm_availability_set" "avset" {
+resource "azurerm_availability_set" "avset" {
    name                         = "avset"
    location                     = var.location
    resource_group_name          = azurerm_resource_group.rg.name
    managed                      = true
  }
 
-// Create virtual machines
+############################################
+#  Virtual machines
+############################################
+
+// Create master virtual machine
 //
 resource "azurerm_linux_virtual_machine" "master-vm" {
     name                  = "${var.project_name}-master-vm"
@@ -209,7 +221,7 @@ resource "azurerm_linux_virtual_machine" "master-vm" {
     }
 }
 
-// VM 2
+// Create worker virtual machine
 //
 resource "azurerm_linux_virtual_machine" "worker-vm" {
     name                  = "${var.project_name}-worker-vm"
