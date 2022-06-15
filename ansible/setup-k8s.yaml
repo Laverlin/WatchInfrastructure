@@ -1,30 +1,25 @@
-- name: mount shared drive
-  hosts: all
-  become: yes
-  tasks:
-    - name: make dir
-      ansible.builtin.file:
-        path: /shared-data
-        state: directory
 
-    - name: setup boot mount
-      ansible.builtin.lineinfile:
-        path: /etc/fstab
-        line: LABEL=data-disk /shared-data ext4 defaults,nofail 0 0
+- import_playbook: playbooks/mount-drive.yaml
+- import_playbook: playbooks/preset-kuber.yaml
+- import_playbook: playbooks/setup-master.yaml
+- import_playbook: playbooks/setup-worker.yaml
 
-    - name: mount 
-      command: "mount -a"
+- import_playbook: playbooks/deploy-traefik.yaml
 
-- name: prepare os
-  hosts: all
-  become: yes
-  tasks:
-  - name: Disable swap for current session
-    command: swapoff -a
 
-  - name: Disable swap permanently, persist reboots
-    replace:
-      path: /etc/fstab
-      regexp: '^(\s*)([^#\n]+\s+)(\w+\s+)swap(\s+.*)$'
-      replace: '#\1\2\3swap\4'
-      backup: yes
+
+
+
+    ## Reboot to make sure everything is fine
+    ##
+    # - name: Reboot all the kubernetes nodes.
+    #   ansible.builtin.reboot:
+    #     post_reboot_delay: 10
+    #     reboot_timeout: 40
+    #     connect_timeout: 60
+    #     test_command: uptime
+    # - pause: seconds=20
+
+
+ 
+

@@ -273,11 +273,9 @@ resource "azurerm_virtual_machine_data_disk_attachment" "data-disk-worker-attach
   caching            = "None"
 }
 
-/*
-
 resource "null_resource" "vm-script-deploy" {
   depends_on = [
-    azurerm_linux_virtual_machine.vm
+    azurerm_linux_virtual_machine.master-vm
   ]
 
   connection {
@@ -287,11 +285,6 @@ resource "null_resource" "vm-script-deploy" {
     private_key = file(var.admin_private_key_path)
     port        = 50221
 
-  }
-
-  provisioner "file" {
-    source      = "docker-hub"
-    destination = "/home/${var.admin_username}/"
   }
 
   provisioner "file" {
@@ -317,20 +310,11 @@ TELEGRAM_YAS_BOT_KEY=${var.telegram_yas_bot_key}
 TELEGRAM_CHAT_ID=${var.telegram_chat_id}
 APP_INSIGHTS_KEY=${var.app_insights_key}
 ADMIN_USERNAME=${var.admin_username}
-VM_PRIVATE_IP=${azurerm_network_interface.nic.private_ip_address}
+VM_PRIVATE_IP=${azurerm_network_interface.nic[0].private_ip_address}
 EOF
-    destination = "/home/${var.admin_username}/docker-hub/.env"
+    destination = "/home/${var.admin_username}/.env"
   }
-
-
-provisioner "remote-exec" {
-    inline = [
-      "chmod +x /home/${var.admin_username}/docker-hub/deploy-script.sh",
-      "sudo /home/${var.admin_username}/docker-hub/deploy-script.sh",
-    ]
-  }    
 }
-*/
 
 #############################################################################
 # OUTPUTS

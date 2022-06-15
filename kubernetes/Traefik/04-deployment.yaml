@@ -1,0 +1,69 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  namespace: ingress
+  name: traefik
+  labels:
+    app: traefik
+
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: traefik
+  template:
+    metadata:
+      labels:
+        app: traefik
+    spec:
+      serviceAccountName: traefik-ingress-account
+      containers:
+        - name: traefik
+          image: traefik:latest
+          env:
+            - name: NAMECOM_API_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: secret-data
+                  key: NAMECOM_TOKEN
+            - name: NAMECOM_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: secret-data
+                  key: NAMECOM_USER
+          args:
+            - --api.insecure
+            - --accesslog
+            - --entrypoints.web.Address=:80
+            - --entrypoints.websecure.Address=:443
+            - --entrypoints.web.http.redirections.entryPoint.to=websecure
+            - --entrypoints.web.http.redirections.entryPoint.scheme=https
+            - --entrypoints.web.http.redirections.entrypoint.permanent=true
+#            - --entrypoints.vpn-500.Address=:500/udp
+#            - --entrypoints.vpn-4500.Address=:4500/udp
+            - --providers.kubernetescrd
+
+            - --serverstransport.insecureskipverify=true
+
+            - --certificatesresolvers.lencrypt.acme.dnschallenge.provider=namedotcom
+            - --certificatesresolvers.lencrypt.acme.dnschallenge.delaybeforecheck=0
+            - --certificatesresolvers.lencrypt.acme.storage=acme.json
+            
+            - --certificatesresolvers.lencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+          ports:
+            - name: web
+              containerPort: 80
+            - name: websecure
+              containerPort: 443
+            - name: admin
+              containerPort: 8080
+#            - name: vpn-500
+#              containerPort: 500
+#              protocol: UDP
+#            - name: vpn-4500
+#              containerPort: 4500
+#              protocol: UDP
+          resources:
+            limits:
+              memory: "100Mi"
+#              cpu: "250m"

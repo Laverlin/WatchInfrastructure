@@ -1,0 +1,129 @@
+## Install common Kubernetes modules 
+##
+- name: Install common Kubernetes modules 
+  hosts: all
+  become: true
+  become_method: sudo
+  become_user: root
+  gather_facts: true
+  tasks:
+
+      ## Prepare OS
+      ##
+    - name: Disable swap for current session
+      command: swapoff -a
+
+    - name: Remove Swap entry from /etc/fstab.
+      ansible.builtin.lineinfile:
+        dest: /etc/fstab
+        regexp: swap
+        state: absent
+
+    - name: update ip-tables for containerd
+      ansible.builtin.lineinfile:
+        path: /etc/modules-load.d/k8s.conf 
+        line: "{{ item }}"
+        create: yes
+      with_items:
+        - 'overlay'
+        - 'br_netfilter'
+
+    - name: refresh ip drivers
+      ansible.builtin.command: "{{ item }}"
+      with_items: 
+        - modprobe overlay
+        - modprobe br_netfilter
+
+
+    - name: Configure sysctl params for Kubernetes.
+      ansible.builtin.lineinfile:
+        path: /etc/sysctl.d/99-kubernetes-cri.conf 
+        line: "{{ item }}"
+        create: yes
+      with_items:
+        - 'net.bridge.bridge-nf-call-iptables  = 1'
+        - 'net.ipv4.ip_forward                 = 1'
+        - 'net.bridge.bridge-nf-call-ip6tables = 1'
+
+    - name: Configure module for containerd.
+      ansible.builtin.blockinfile:
+        path: /etc/modules-load.d/containerd.conf 
+        block: |
+              overlay
+              br_netfilter
+        create: yes
+
+    - name: Apply sysctl params without reboot.
+      command: sysctl --system
+
+    ## Install containerd
+    ##
+    - name: Installing Prerequisites for Kubernetes
+      ansible.builtin.apt: 
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg-agent
+          - software-properties-common
+        state: present
+
+    - name: Add Docker's official GPG key
+      ansible.builtin.apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+
+    - name: Add Docker Repository
+      ansible.builtin.apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
+        state: present
+        filename: docker
+        update_cache: yes
+
+    - name: Install containerd.
+      ansible.builtin.apt: 
+        name:
+          - containerd.io
+        state: present
+
+    - name: Create containerd config folder.
+      ansible.builtin.file:
+        path: /etc/containerd
+        state: directory
+
+    - name: Configure containerd.
+      ansible.builtin.shell: /usr/bin/containerd config default > /etc/containerd/config.toml
+
+    - name: Enable containerd service, and start it.
+      ansible.builtin.systemd: 
+        name: containerd
+        state: restarted
+        enabled: yes
+        daemon-reload: yes
+
+    ## Install kube* modules
+    ##
+    - name: Add Google official GPG key
+      ansible.builtin.apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: Add Kubernetes Repository
+      ansible.builtin.apt_repository:
+        repo: deb http://apt.kubernetes.io/ kubernetes-xenial main 
+        state: present
+        filename: kubernetes
+        mode: 0600
+
+    - name: Installing Kubernetes Cluster Packages.
+      ansible.builtin.apt: 
+        name:
+          - kubeadm
+          - kubectl
+          - kubelet
+        state: present
+
+    - name: Enable service kubelet, and enable persistently
+      ansible.builtin.service: 
+        name: kubelet
+        enabled: yes

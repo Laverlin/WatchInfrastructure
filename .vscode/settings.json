@@ -1,0 +1,5 @@
+{
+    "yaml.schemas": {
+        "https://raw.githubusercontent.com/ansible-community/schemas/main/f/ansible.json#/$defs/playbook": "file:///Users/ruabdid/Projects/WatchInfrastructure/ansible/setup-k8s.yaml"
+    }
+}

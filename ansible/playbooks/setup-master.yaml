@@ -1,0 +1,67 @@
+## Setup master node 
+##
+- name: Setup master node
+  hosts: master
+  become: true
+  become_method: sudo
+  become_user: root
+  gather_facts: true
+  tasks:
+
+    - name: Upload kubernetes resources
+      become_user: "{{ ansible_user }}"
+      ansible.builtin.copy:
+        src: ./../../kubernetes
+        dest: $HOME/
+        remote_src: no
+
+    - name: Intilizing Kubernetes Cluster
+      ansible.builtin.command: kubeadm init --pod-network-cidr=10.244.0.0/16 --cri-socket=unix:///run/containerd/containerd.sock
+      args:
+        creates: /etc/kubernetes/manifests/kube-apiserver.yaml
+
+    - name: Create directory for kube config.
+      ansible.builtin.file: 
+        path: /home/{{ ansible_user }}/.kube
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: 0755
+
+    - name: Copy /etc/kubernetes/admin.conf to user home directory /home/{{ ansible_user }}/.kube/config.
+      ansible.builtin.copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/{{ ansible_user }}/.kube/config
+        remote_src: yes
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: 0644
+
+    - name: Remove the cache directory.
+      ansible.builtin.file: 
+        path: /home/{{ ansible_user }}/.kube/cache
+        state: absent
+
+    ## install kube network
+    ##
+    - name: Create Pod Network & RBAC.
+      become_user: "{{ ansible_user }}"
+      ansible.builtin.command: "{{ item }}"
+      with_items: 
+          - kubectl apply -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
+          - kubectl apply -f $HOME/kubernetes/calico-config.yaml
+
+    - pause: seconds=30
+
+    - name: Get the token for joining the nodes with Kuberentes master.
+      ansible.builtin.shell: kubeadm token create  --print-join-command
+      register: kubernetes_join_command
+
+    - debug:
+        msg: "{{ kubernetes_join_command.stdout }}"
+
+    - name: Copy join command to local file.
+      delegate_to: localhost
+      ansible.builtin.copy:
+        content: "{{ kubernetes_join_command.stdout_lines[0] }}"
+        dest: /tmp/kubernetes_join_command
