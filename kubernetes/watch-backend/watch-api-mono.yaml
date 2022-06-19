@@ -86,6 +86,8 @@ spec:
                 secretKeyRef:
                   name: secret-data
                   key: TELEGRAM_YAS_BOT_KEY
+            - name: FaceSettings__DisableYasBot
+              value: "true"
             - name: PostgresProviderSettings__UserId
               valueFrom:
                 secretKeyRef:
@@ -101,6 +103,8 @@ spec:
                 secretKeyRef:
                   name: secret-data
                   key: APP_INSIGHTS_KEY
+            - name: Serilog__WriteTo__1__Args__serverUrl
+              value: http://seq.monitoring:5341
           resources:
             requests:
               memory: "100Mi"

@@ -16,7 +16,7 @@
         remote_src: no
 
     - name: Intilizing Kubernetes Cluster
-      ansible.builtin.command: kubeadm init --pod-network-cidr=10.244.0.0/16 --cri-socket=unix:///run/containerd/containerd.sock
+      command: "kubeadm init --pod-network-cidr=10.244.0.0/16 --cri-socket=unix:///run/containerd/containerd.sock"
       args:
         creates: /etc/kubernetes/manifests/kube-apiserver.yaml
 
@@ -47,7 +47,7 @@
     - name: Remove mater/control roles
       become_user: "{{ ansible_user }}"
       ignore_errors: true
-      ansible.builtin.command: kubectl taint nodes --all node-role.kubernetes.io/control-plane- node-role.kubernetes.io/master-
+      command: "kubectl taint nodes --all node-role.kubernetes.io/control-plane- node-role.kubernetes.io/master-"
 
     - name: Create Pod Network & RBAC.
       become_user: "{{ ansible_user }}"
@@ -56,14 +56,15 @@
          - kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml 
 
     - name: Get the token for joining the nodes with Kuberentes master.
-      ansible.builtin.shell: kubeadm token create  --print-join-command
+      shell: "kubeadm token create  --print-join-command"
       register: kubernetes_join_command
 
     - debug:
         msg: "{{ kubernetes_join_command.stdout }}"
 
-    - name: Copy join command to local file.
+    - name: Copy join command to local file
       delegate_to: localhost
+      become: false
       ansible.builtin.copy:
         content: "{{ kubernetes_join_command.stdout_lines[0] }}"
-        dest: /tmp/kubernetes_join_command
+        dest: ~/tmp/kubernetes_join_command
