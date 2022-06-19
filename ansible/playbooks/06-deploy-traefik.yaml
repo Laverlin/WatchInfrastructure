@@ -14,8 +14,8 @@
         - kubectl apply -f $HOME/kubernetes/traefik/05-service.yaml
         - kubectl apply -f $HOME/kubernetes/traefik/06-dashboards.yaml
 
-    - name: Deploy test
-      ansible.builtin.command: "{{ item }}"
-      with_items: 
-        - kubectl apply -f $HOME/kubernetes/test/whoami-m.yaml
-        - kubectl apply -f $HOME/kubernetes/test/whoami-w.yaml
+    # - name: Deploy test
+    #   ansible.builtin.command: "{{ item }}"
+    #   with_items: 
+    #     - kubectl apply -f $HOME/kubernetes/test/whoami-m.yaml
+    #     - kubectl apply -f $HOME/kubernetes/test/whoami-w.yaml
