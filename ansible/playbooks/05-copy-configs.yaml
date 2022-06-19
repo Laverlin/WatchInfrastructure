@@ -1,0 +1,29 @@
+- name: Copy config files
+  hosts: master
+  become: true
+  become_method: sudo
+  become_user: root
+  gather_facts: true
+  tasks:
+
+    - name: Copy config files
+      ansible.builtin.copy:
+        src: ./../../configs
+        dest: /shared-data
+        force: yes # We always want to have a fresh configs
+
+    - name: Copy wwwroot
+      ansible.builtin.copy:
+        src: ./../../persist/wwwroot
+        dest: /shared-data/persist
+        force: yes # And we always want to have a fresh wwwwroot
+
+    - name: Copy grafana dashboards
+      ansible.builtin.copy:
+        src: ./../../persist/grafana
+        dest: /shared-data/persist
+        force: no # But the grafana dashboards we want to copy only once (!)
+    
+    - name: Change permission to shaed folder
+      ansible.builtin.command: chmod -R a+rw /shared-data/persist
+        

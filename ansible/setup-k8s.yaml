@@ -1,10 +1,17 @@
 
-- import_playbook: playbooks/mount-drive.yaml
-- import_playbook: playbooks/preset-kuber.yaml
-- import_playbook: playbooks/setup-master.yaml
-- import_playbook: playbooks/setup-worker.yaml
+- import_playbook: playbooks/01-mount-drive.yaml
+- import_playbook: playbooks/02-preset-k8s.yaml
+- import_playbook: playbooks/03-setup-master.yaml
+- import_playbook: playbooks/04-setup-worker.yaml
 
-- import_playbook: playbooks/deploy-traefik.yaml
+# - import_playbook: playbooks/setup-cni-plugin.yaml
+
+- import_playbook: playbooks/05-copy-configs.yaml
+- import_playbook: playbooks/06-deploy-traefik.yaml
+- import_playbook: playbooks/07-deploy-kuber-dashboard.yaml
+- import_playbook: playbooks/08-deploy-side-services.yaml
+- import_playbook: playbooks/09-deploy-monitoring.yaml
+- import_playbook: playbooks/10-deploy-watch-backend.yaml
 
 
 
@@ -12,13 +19,13 @@
 
     ## Reboot to make sure everything is fine
     ##
-    # - name: Reboot all the kubernetes nodes.
-    #   ansible.builtin.reboot:
-    #     post_reboot_delay: 10
-    #     reboot_timeout: 40
-    #     connect_timeout: 60
-    #     test_command: uptime
-    # - pause: seconds=20
+# - name: Reboot all the kubernetes nodes.
+#   ansible.builtin.reboot:
+#     post_reboot_delay: 10
+#     reboot_timeout: 40
+#     connect_timeout: 60
+#     test_command: uptime
+# - pause: seconds=20
 
 
  

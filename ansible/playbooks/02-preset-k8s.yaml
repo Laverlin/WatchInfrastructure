@@ -34,7 +34,6 @@
         - modprobe overlay
         - modprobe br_netfilter
 
-
     - name: Configure sysctl params for Kubernetes.
       ansible.builtin.lineinfile:
         path: /etc/sysctl.d/99-kubernetes-cri.conf 
@@ -45,7 +44,7 @@
         - 'net.ipv4.ip_forward                 = 1'
         - 'net.bridge.bridge-nf-call-ip6tables = 1'
 
-    - name: Configure module for containerd.
+    - name: Configure module for containerd
       ansible.builtin.blockinfile:
         path: /etc/modules-load.d/containerd.conf 
         block: |
@@ -53,7 +52,7 @@
               br_netfilter
         create: yes
 
-    - name: Apply sysctl params without reboot.
+    - name: Apply sysctl params without reboot
       command: sysctl --system
 
     ## Install containerd
@@ -80,13 +79,13 @@
         filename: docker
         update_cache: yes
 
-    - name: Install containerd.
+    - name: Install containerd
       ansible.builtin.apt: 
         name:
           - containerd.io
         state: present
 
-    - name: Create containerd config folder.
+    - name: Create containerd config folder
       ansible.builtin.file:
         path: /etc/containerd
         state: directory

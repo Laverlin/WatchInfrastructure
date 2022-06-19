@@ -1,0 +1,24 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+
+  - name: PostgreSQL
+    type: postgres
+    url: pg-server.watch-backend:5432
+    database: WatchService
+    user: $PG_USER
+    editable: true
+    secureJsonData:
+      password: $PG_PASS
+    jsonData:
+      sslmode: "disable"
+
+  #- name: Loki
+  #  type: loki
+  #  url: http://localhost:3100
+  #  jsonData:
+  #    maxLines: 1000

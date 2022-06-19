@@ -1,0 +1,17 @@
+- name: Deploy Monitoring Tools
+  hosts: master
+  gather_facts: true
+  tasks:
+
+    - name: Deploy node-exporter
+      ansible.builtin.shell: "{{ item }}"
+      with_items: 
+        - kubectl apply -f ~/kubernetes/monitoring/00-namespace.yaml
+        - kubectl apply -f ~/kubernetes/monitoring/node-exporter.yaml
+        - "kubectl create secret generic secret-data --from-env-file .env --namespace=monitoring --dry-run=client -o yaml | kubectl apply -f -"
+        - kubectl apply -f ~/kubernetes/monitoring/dashboard-k8s.yaml
+        - kubectl apply -f ~/kubernetes/monitoring/open-telemetry.yaml
+        - kubectl apply -f ~/kubernetes/monitoring/zipkin.yaml
+        - kubectl apply -f ~/kubernetes/monitoring/prometheus.yaml
+        - kubectl apply -f ~/kubernetes/monitoring/grafana.yaml
+        - kubectl apply -f ~/kubernetes/monitoring/seq.yaml

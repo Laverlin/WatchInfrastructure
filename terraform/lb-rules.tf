@@ -1,45 +1,20 @@
-resource "azurerm_lb_rule" "lb-httprule" {
-  loadbalancer_id                = azurerm_lb.lb.id
-  name                           = "HTTP"
-  protocol                       = "Tcp"
-  frontend_port                  = 80
-  backend_port                   = 30800
-  frontend_ip_configuration_name = "PublicIPAddress"
-  backend_address_pool_ids = [azurerm_lb_backend_address_pool.addr_pool.id]
-  depends_on = [azurerm_lb_backend_address_pool.addr_pool, azurerm_lb.lb]
-}
+resource "azurerm_lb_rule"  "lb-rules"{
+  for_each = {
+    HTTP = { protocol = "Tcp", fr-port = 80, bk-port = 30800 }
+    HTTPS = { protocol = "Tcp", fr-port = 443, bk-port = 30443 }
+    UDP-500 = { protocol = "Udp", fr-port = 500, bk-port = 30500 }
+    UDP-4500 = { protocol = "Udp", fr-port = 4500, bk-port = 30450 }
+  }
 
-resource "azurerm_lb_rule" "lb-httpsrule" {
   loadbalancer_id                = azurerm_lb.lb.id
-  name                           = "HTTPS"
-  protocol                       = "Tcp"
-  frontend_port                  = 443
-  backend_port                   = 30443
-  frontend_ip_configuration_name = "PublicIPAddress"
+  name                           = each.key
+  protocol                       = each.value.protocol
+  frontend_port                  = each.value.fr-port
+  backend_port                   = each.value.bk-port
+  frontend_ip_configuration_name = azurerm_lb.lb.frontend_ip_configuration[0].name
   backend_address_pool_ids = [azurerm_lb_backend_address_pool.addr_pool.id]
   depends_on = [azurerm_lb_backend_address_pool.addr_pool, azurerm_lb.lb]
-}
-
-resource "azurerm_lb_rule" "lb-udp500" {
-  loadbalancer_id                = azurerm_lb.lb.id
-  name                           = "UDP-500"
-  protocol                       = "Udp"
-  frontend_port                  = 500
-  backend_port                   = 30500
-  frontend_ip_configuration_name = "PublicIPAddress"
-  backend_address_pool_ids = [azurerm_lb_backend_address_pool.addr_pool.id]
-  depends_on = [azurerm_lb_backend_address_pool.addr_pool, azurerm_lb.lb]
-}
-
-resource "azurerm_lb_rule" "lb-udp4500" {
-  loadbalancer_id                = azurerm_lb.lb.id
-  name                           = "UDP-4500"
-  protocol                       = "Udp"
-  frontend_port                  = 4500
-  backend_port                   = 30450
-  frontend_ip_configuration_name = "PublicIPAddress"
-  backend_address_pool_ids = [azurerm_lb_backend_address_pool.addr_pool.id]
-  depends_on = [azurerm_lb_backend_address_pool.addr_pool, azurerm_lb.lb]
+  
 }
 
 ########################################
@@ -55,7 +30,7 @@ resource "azurerm_lb_nat_rule" "ssh_rule_master" {
   protocol                       = "Tcp"
   frontend_port                  = 50221
   backend_port                   = 22
-  frontend_ip_configuration_name = "PublicIPAddress"
+  frontend_ip_configuration_name = azurerm_lb.lb.frontend_ip_configuration[0].name
   depends_on = [azurerm_lb.lb]
 }
 
@@ -75,7 +50,7 @@ resource "azurerm_lb_nat_rule" "ssh_rule_worker" {
   protocol                       = "Tcp"
   frontend_port                  = 50222
   backend_port                   = 22
-  frontend_ip_configuration_name = "PublicIPAddress"
+  frontend_ip_configuration_name = azurerm_lb.lb.frontend_ip_configuration[0].name
   depends_on = [azurerm_lb.lb]
 }
 
@@ -95,7 +70,7 @@ resource "azurerm_lb_nat_rule" "kubectl_rule" {
   protocol                       = "Tcp"
   frontend_port                  = 6443
   backend_port                   = 6443
-  frontend_ip_configuration_name = "PublicIPAddress"
+  frontend_ip_configuration_name = azurerm_lb.lb.frontend_ip_configuration[0].name
   depends_on = [azurerm_lb.lb]
 }
 

@@ -1,0 +1,21 @@
+- name: Deploy Traefik
+  hosts: master
+  gather_facts: true
+  tasks:
+ 
+    - name: Deploy Traefik
+      ansible.builtin.shell: "{{ item }}"
+      with_items: 
+        - kubectl apply -f $HOME/kubernetes/traefik/01-definitions.yaml
+        - kubectl apply -f $HOME/kubernetes/traefik/02-namespace.yaml  
+        - "kubectl create secret generic secret-data --from-env-file .env --namespace=ingress --dry-run=client -o yaml | kubectl apply -f -"
+        - kubectl apply -f $HOME/kubernetes/traefik/03-rbac.yaml
+        - kubectl apply -f $HOME/kubernetes/traefik/04-deployment.yaml
+        - kubectl apply -f $HOME/kubernetes/traefik/05-service.yaml
+        - kubectl apply -f $HOME/kubernetes/traefik/06-dashboards.yaml
+
+    - name: Deploy test
+      ansible.builtin.command: "{{ item }}"
+      with_items: 
+        - kubectl apply -f $HOME/kubernetes/test/whoami-m.yaml
+        - kubectl apply -f $HOME/kubernetes/test/whoami-w.yaml

@@ -1,0 +1,11 @@
+- name: Deploy Side Services
+  hosts: master
+  gather_facts: true
+  tasks:
+
+    - name: Deploy services
+      ansible.builtin.shell: "{{ item }}"
+      with_items: 
+        - kubectl apply -f ~/kubernetes/side-services/00-namespace.yaml
+        - "kubectl create secret generic secret-data --from-env-file .env --namespace=side-services --dry-run=client -o yaml | kubectl apply -f -"
+        - kubectl apply -f ~/kubernetes/side-services/vpn.yaml

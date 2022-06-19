@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: whoami-w
+  labels:
+    app: whoami-w
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: whoami-w
+  template:
+    metadata:
+      labels:
+        app: whoami-w
+    spec:
+      nodeName: "montalcino-worker-vm"
+      containers:
+      - image: docker.io/traefik/whoami:v1.6.1
+        name: whoami-w
+        ports:
+        - containerPort: 80
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: whoami-w
+spec:
+  ports:
+  - name: whoami-w
+    port: 80
+    targetPort: 80
+  selector:
+    app: whoami-w

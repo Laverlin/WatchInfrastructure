@@ -1,0 +1,9 @@
+variable "rg_name" {}
+variable "location" {}
+variable "nic_id" {}
+variable "vm_size" {}
+variable "vm_name" {}
+variable "admin_public_key_path" {}
+variable "admin_username" {}
+variable "av_id" {}
+#variable "shared_disk_id" {}

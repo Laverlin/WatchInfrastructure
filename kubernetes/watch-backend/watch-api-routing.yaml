@@ -1,0 +1,35 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: watch-api-routing
+  namespace: watch-backend
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: watch-api-wrr
+      port: 88
+      kind: TraefikService
+  tls:
+    certResolver: lencrypt
+---
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: TraefikService
+metadata:
+  name: watch-api-wrr
+  namespace: watch-backend
+
+spec:
+  weighted:
+    services:
+      - name: watch-api-mono
+        port: 88
+        weight: 9
+      - name: watch-api-micro
+        port: 88
+        weight: 1
+

@@ -1,0 +1,69 @@
+## Service Account
+##
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: kubernetes-dashboard
+  name: kubedash-account
+---
+
+## Cluster Role Binding
+##
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  namespace: kubernetes-dashboard
+  name: kubedash-account
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: kubedash-account
+    namespace: kubernetes-dashboard
+---
+
+## Secret
+##
+apiVersion: v1
+kind: Secret
+metadata:
+  namespace: kubernetes-dashboard
+  name: kubedash-secret
+  annotations:
+    kubernetes.io/service-account.name: kubedash-account
+type: kubernetes.io/service-account-token
+
+---
+## Traefik routing
+##
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: dashboard-kuber
+  namespace: kubernetes-dashboard
+spec:
+ replacePathRegex:
+    regex: ^/dashboard-kuber/(.*)
+    replacement: /$1
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: dashboard-kuber
+  namespace: kubernetes-dashboard
+spec:
+  entryPoints:
+  - websecure
+  routes:
+  - match: PathPrefix(`/dashboard-kuber`)
+    kind: Rule
+    middlewares:
+    - name: dashboard-kuber
+    services:
+    - name: kubernetes-dashboard
+      port: 443
+  tls:
+    certResolver: lencrypt

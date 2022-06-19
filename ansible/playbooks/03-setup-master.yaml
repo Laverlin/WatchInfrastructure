@@ -28,7 +28,7 @@
         group: "{{ ansible_user }}"
         mode: 0755
 
-    - name: Copy /etc/kubernetes/admin.conf to user home directory /home/{{ ansible_user }}/.kube/config.
+    - name: Copy /etc/kubernetes/admin.conf to user home directory /home/{{ ansible_user }}/.kube/config
       ansible.builtin.copy:
         src: /etc/kubernetes/admin.conf
         dest: /home/{{ ansible_user }}/.kube/config
@@ -44,14 +44,16 @@
 
     ## install kube network
     ##
+    - name: Remove mater/control roles
+      become_user: "{{ ansible_user }}"
+      ignore_errors: true
+      ansible.builtin.command: kubectl taint nodes --all node-role.kubernetes.io/control-plane- node-role.kubernetes.io/master-
+
     - name: Create Pod Network & RBAC.
       become_user: "{{ ansible_user }}"
       ansible.builtin.command: "{{ item }}"
-      with_items: 
-          - kubectl apply -f https://docs.projectcalico.org/manifests/tigera-operator.yaml
-          - kubectl apply -f $HOME/kubernetes/calico-config.yaml
-
-    - pause: seconds=30
+      with_items:
+         - kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml 
 
     - name: Get the token for joining the nodes with Kuberentes master.
       ansible.builtin.shell: kubeadm token create  --print-join-command

@@ -1,0 +1,71 @@
+# Grafana pod deployment
+#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana:latest
+          ports:
+            - containerPort: 3000
+          imagePullPolicy: 'IfNotPresent'
+          env:
+            - name: GF_INSTALL_PLUGINS
+              value: grafana-piechart-panel,grafana-worldmap-panel
+            - name: PG_USER
+              valueFrom:
+                secretKeyRef:
+                  name: secret-data
+                  key: PG_USER
+            - name: PG_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: secret-data
+                  key: PG_PASS
+          volumeMounts:
+            - name: grafana-provision
+              mountPath: /etc/grafana/provisioning
+            - name: grafana-dashboard
+              mountPath: /var/lib/grafana/dashboards
+          resources:
+            limits:
+               memory: "200Mi"
+      volumes:
+        - name: grafana-provision
+          hostPath:
+            path: /shared-data/persist/grafana/provisioning
+            type: Directory
+        - name: grafana-dashboard
+          hostPath:
+            path: /shared-data/persist/grafana/dashboards
+            type: Directory
+---
+
+# service
+#
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  selector:
+    app: grafana
+  ports:
+    - port: 3000
+      targetPort: 3000
+      nodePort: 30300
+      name: grafana-port
+  type: NodePort

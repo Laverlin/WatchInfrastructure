@@ -1,0 +1,43 @@
+## Mount shared drive
+##
+- name: mount shared drive
+  hosts: all
+  become: true
+  become_method: sudo
+  become_user: root
+  gather_facts: true
+  tasks:
+    - name: make dir
+      ansible.builtin.file:
+        path: /shared-data
+        state: directory
+
+    ## Hell of a chemistry to extract secret data from secret file
+    ##
+    - set_fact:
+        secret_vars: "{{ secret_vars|d({})|combine({_key: _val}) }}"
+      loop: "{{ lookup('file', './../../terraform/secret.auto.tfvars').split('\n') }}"
+      when: item is match('(?!\s*#).* = .*')
+      vars:
+        _arr: "{{ item.split(' = ') }}"
+        _key: "{{ _arr.0 | trim  }}"
+        _val: "{{ _arr.1 | trim | regex_replace('[\"]', '') }}"
+
+    - name: create credentials file
+      ansible.builtin.lineinfile:
+        path: /etc/smbcredentials
+        line: "{{ item }}"
+        create: true
+      with_items: 
+        - "username={{ secret_vars.azure_storage_account }}"
+        - "password={{ secret_vars.azure_storage_key }}"
+        
+
+    - name: setup boot mount
+      ansible.builtin.lineinfile:
+        path: /etc/fstab
+        line: "//commonblob2store.file.core.windows.net/shared-data /shared-data cifs nofail,credentials=/etc/smbcredentials,serverino,nosharesock,actimeo=30" 
+        #LABEL=data-disk /shared-data xfs defaults,nofail 0 0
+
+    - name: mount 
+      command: mount -a

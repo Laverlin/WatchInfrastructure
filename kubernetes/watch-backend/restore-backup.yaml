@@ -1,0 +1,54 @@
+# Restore backup
+#
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: restore-backup
+  namespace: watch-backend
+spec:
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      containers:
+      - name: restore-backup
+        image: ilaverlin/pg-az-backup
+        env:
+        - name: POSTGRES_HOST
+          value: pg-server
+        - name: POSTGRES_DATABASE
+          value: "WatchService"
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: secret-data
+              key: PG_USER
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secret-data
+              key: PG_PASS
+        - name: AZURE_STORAGE_ACCOUNT
+          valueFrom:
+            secretKeyRef:
+              name: secret-data
+              key: AZ_STORAGE_ACCOUNT
+        - name: AZURE_SAS
+          valueFrom:
+            secretKeyRef:
+              name: secret-data
+              key: AZ_SAS_TOKEN
+        - name: AZURE_CONTAINER_NAME
+          valueFrom:
+            secretKeyRef:
+              name: secret-data
+              key: AZ_CONTAINER_NAME
+        - name: RESTORE
+          value: "yes"
+        - name: DROP_PUBLIC
+          value: "create"
+      initContainers:
+      - name: wait-postrges
+        image: postgres:alpine
+        command: ['sh', '-c', "until pg_isready -h pg-server -p 5432; do  echo waiting for pg-server; sleep 5; done"]
+      restartPolicy: Never
+  backoffLimit: 0

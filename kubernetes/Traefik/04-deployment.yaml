@@ -39,16 +39,19 @@ spec:
             - --entrypoints.web.http.redirections.entryPoint.to=websecure
             - --entrypoints.web.http.redirections.entryPoint.scheme=https
             - --entrypoints.web.http.redirections.entrypoint.permanent=true
-#            - --entrypoints.vpn-500.Address=:500/udp
-#            - --entrypoints.vpn-4500.Address=:4500/udp
+
             - --providers.kubernetescrd
+            - --providers.kubernetesingress=true
 
             - --serverstransport.insecureskipverify=true
+
+            - --ping=true
 
             - --certificatesresolvers.lencrypt.acme.dnschallenge.provider=namedotcom
             - --certificatesresolvers.lencrypt.acme.dnschallenge.delaybeforecheck=0
             - --certificatesresolvers.lencrypt.acme.storage=acme.json
             
+            ## DEBUG only
             - --certificatesresolvers.lencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
           ports:
             - name: web
@@ -57,12 +60,26 @@ spec:
               containerPort: 443
             - name: admin
               containerPort: 8080
-#            - name: vpn-500
-#              containerPort: 500
-#              protocol: UDP
-#            - name: vpn-4500
-#              containerPort: 4500
-#              protocol: UDP
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /ping
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            failureThreshold: 1
+            httpGet:
+              path: /ping
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
           resources:
             limits:
               memory: "100Mi"

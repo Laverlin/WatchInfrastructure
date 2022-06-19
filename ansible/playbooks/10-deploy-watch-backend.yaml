@@ -1,0 +1,16 @@
+- name: Deploy Watch Backend
+  hosts: master
+  gather_facts: true
+  tasks:
+
+    - name: Deploy watch backend
+      ansible.builtin.shell: "{{ item }}"
+      with_items: 
+        - kubectl apply -f ~/kubernetes/watch-backend/00-namespace.yaml
+        - "kubectl create secret generic secret-data --from-env-file .env --namespace=watch-backend --dry-run=client -o yaml | kubectl apply -f -"
+        - kubectl apply -f ~/kubernetes/watch-backend/kafka.yaml
+        - kubectl apply -f ~/kubernetes/watch-backend/postgres.yaml
+        - kubectl apply -f ~/kubernetes/watch-backend/restore-backup.yaml
+        - kubectl apply -f ~/kubernetes/watch-backend/watch-api-mono.yaml
+        - kubectl apply -f ~/kubernetes/watch-backend/watch-api-micro.yaml
+        - kubectl apply -f ~/kubernetes/watch-backend/watch-api-routing.yaml

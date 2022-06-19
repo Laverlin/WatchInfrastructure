@@ -17,7 +17,10 @@ variable "azure_storage_key" {}
 
 variable "namecom_user" {}
 variable "namecom_token" {}
-variable "domain_name" {}
+variable "namecom_fqn" {}
+variable "namecom_host" {}
+variable "namecom_domain" {}
+variable "namecom_entry_id" {}
 
 variable "env_postgress_user" {}
 variable "env_postgress_password" {}
@@ -122,6 +125,7 @@ resource "azurerm_public_ip" "public_ip" {
     }
 }
 
+
 // Network Interface Cards
 //
 resource "azurerm_network_interface" "nic" {
@@ -129,12 +133,23 @@ resource "azurerm_network_interface" "nic" {
     name                        = "${var.project_name}-${format("%02d", count.index)}-nic"
     location                    = var.location
     resource_group_name         = azurerm_resource_group.rg.name
+    enable_ip_forwarding        = true
 
     ip_configuration {
-        name                          = "nic-config-${var.project_name}"
+        name                          = "ip-config-main"
         subnet_id                     = azurerm_subnet.subnet.id
         private_ip_address_allocation = "Dynamic"
+        primary                       = true
     }
+
+    # dynamic "ip_configuration" {
+    #   for_each=range(100)
+    #   content {
+    #     name                          = "ip-config-${ip_configuration.value}"
+    #     subnet_id                     = azurerm_subnet.subnet.id
+    #     private_ip_address_allocation = "Dynamic"
+    #   }
+    # }
 
     tags = {
         project = var.project_name
@@ -152,6 +167,7 @@ resource "azurerm_lb" "lb" {
     name                 = "PublicIPAddress"
     public_ip_address_id = azurerm_public_ip.public_ip.id
   }
+
 }
 
 // Create backend address pool for the LoadBalancer
@@ -183,99 +199,27 @@ resource "azurerm_availability_set" "avset" {
 #  Virtual machines
 ############################################
 
-// Create master virtual machine
-//
-resource "azurerm_linux_virtual_machine" "master-vm" {
-    name                  = "${var.project_name}-master-vm"
-    location              = var.location
-    resource_group_name   = azurerm_resource_group.rg.name
-    network_interface_ids = [azurerm_network_interface.nic[0].id]
-    size                  = var.vm_size
-    availability_set_id   = azurerm_availability_set.avset.id
-
-    os_disk {
-        name              = "${var.project_name}-master-disk"
-        caching           = "ReadWrite"
-        storage_account_type = "Standard_LRS"
-        disk_size_gb = 30
-    }
-
-    source_image_reference {
-        publisher = "Canonical"
-        offer     = "0001-com-ubuntu-server-focal"
-        sku       = "20_04-lts"
-        version   = "latest"
-    }
-
-    computer_name  = "${var.project_name}-master-vm"
-    admin_username = var.admin_username
-    disable_password_authentication = true
-
-    admin_ssh_key {
-        username       = var.admin_username
-        public_key     = file(var.admin_public_key_path)
-    }
-
-    tags = {
-        project = var.project_name
-    }
+module "vm-module" {
+  source           = "./vm-module"
+  for_each = {
+    "master" = {size = "Standard_B2s", nic-id = azurerm_network_interface.nic[0].id}
+    "worker" = {size = "Standard_B1ms", nic-id = azurerm_network_interface.nic[1].id} 
+  }
+  vm_name          = "${var.project_name}-${each.key}-vm"
+  rg_name          = azurerm_resource_group.rg.name
+  location         = var.location
+  nic_id           = each.value.nic-id
+  admin_public_key_path        = var.admin_public_key_path
+  admin_username    = var.admin_username
+  vm_size           = each.value.size
+  #shared_disk_id    = azurerm_managed_disk.shared-data-disk.id
+  av_id             = azurerm_availability_set.avset.id
 }
 
-// Create worker virtual machine
-//
-resource "azurerm_linux_virtual_machine" "worker-vm" {
-    name                  = "${var.project_name}-worker-vm"
-    location              = var.location
-    resource_group_name   = azurerm_resource_group.rg.name
-    network_interface_ids = [azurerm_network_interface.nic[1].id]
-    size                  = "Standard_B1ms"
-    availability_set_id   = azurerm_availability_set.avset.id
-
-    os_disk {
-        name              = "${var.project_name}-worker-disk"
-        caching           = "ReadWrite"
-        storage_account_type = "Standard_LRS"
-        disk_size_gb = 30
-    }
-
-    source_image_reference {
-        publisher = "Canonical"
-        offer     = "0001-com-ubuntu-server-focal"
-        sku       = "20_04-lts"
-        version   = "latest"
-    }
-
-    computer_name  = "${var.project_name}-worker-vm"
-    admin_username = var.admin_username
-    disable_password_authentication = true
-
-    admin_ssh_key {
-        username       = var.admin_username
-        public_key     = file(var.admin_public_key_path)
-    }
-
-    tags = {
-        project = var.project_name
-    }
-}
-
-resource "azurerm_virtual_machine_data_disk_attachment" "data-disk-master-attachment" {
-  managed_disk_id    = azurerm_managed_disk.shared-data-disk.id
-  virtual_machine_id = azurerm_linux_virtual_machine.master-vm.id
-  lun                = "10"
-  caching            = "None"
-}
-
-resource "azurerm_virtual_machine_data_disk_attachment" "data-disk-worker-attachment" {
-  managed_disk_id    = azurerm_managed_disk.shared-data-disk.id
-  virtual_machine_id = azurerm_linux_virtual_machine.worker-vm.id
-  lun                = "10"
-  caching            = "None"
-}
 
 resource "null_resource" "vm-script-deploy" {
   depends_on = [
-    azurerm_linux_virtual_machine.master-vm
+    module.vm-module
   ]
 
   connection {
@@ -287,6 +231,12 @@ resource "null_resource" "vm-script-deploy" {
 
   }
 
+  provisioner "remote-exec" {
+    inline = [
+      "curl -u '${var.namecom_user}:${var.namecom_token}' 'https://api.name.com/v4/domains/${var.namecom_domain}/records/${var.namecom_entry_id}' -X PUT -H 'Content-Type: application/json' --data '{\"host\":\"${var.namecom_host}\",\"type\":\"A\",\"answer\":\"${azurerm_public_ip.public_ip.ip_address}\",\"ttl\":300}'"
+    ]
+  }
+
   provisioner "file" {
     content = <<EOF
 VPN_IPSEC_PSK="${var.vpn_pre_shared_key}"
@@ -294,7 +244,7 @@ VPN_USER="${var.vpn_username}"
 VPN_PASSWORD="${var.vpn_password}"
 NAMECOM_USER=${var.namecom_user}
 NAMECOM_TOKEN=${var.namecom_token}
-DOMAIN_NAME=${var.domain_name}
+DOMAIN_NAME=${var.namecom_fqn}
 PG_USER=${var.env_postgress_user}
 PG_PASS=${var.env_postgress_password}
 AZ_STORAGE_ACCOUNT=${var.azure_storage_account}
@@ -325,7 +275,7 @@ output "resource_group"{
 }
 
 output "domain_name" {
-  value = var.domain_name 
+  value = var.namecom_fqn 
 }
 
 output "public_ip" {
