@@ -1,3 +1,25 @@
+# default route to legacy server
+#
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: default-routing
+  namespace: watch-backend
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: PathPrefix(`/`)
+    kind: Rule
+    services:
+    - name: watch-api-mono
+      port: 88
+  tls:
+    certResolver: lencrypt
+---
+
+# Canary deployment watch-api routes
+#
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
@@ -7,7 +29,7 @@ spec:
   entryPoints:
     - websecure
   routes:
-  - match: PathPrefix(`/`)
+  - match: PathPrefix(`/watch-api`)
     kind: Rule
     services:
     - name: watch-api-wrr

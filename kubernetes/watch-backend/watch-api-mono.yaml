@@ -124,6 +124,19 @@ spec:
     - port: 88
 ---
 
+# Middleware
+#
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: mono-redirect
+  namespace: watch-backend
+spec:
+ replacePathRegex:
+    regex: ^/mono/(.*)
+    replacement: /$1
+---
+
 # Route
 #
 apiVersion: traefik.containo.us/v1alpha1
@@ -137,6 +150,8 @@ spec:
   routes:
   - match: PathPrefix(`/mono`)
     kind: Rule
+    middlewares:
+    - name: mono-redirect    
     services:
     - name: watch-api-mono
       port: 88

@@ -1,0 +1,14 @@
+- name: Cleanup
+  hosts: all
+  gather_facts: true
+  tasks:
+
+    - name: Remove kubernetes deployments
+      ansible.builtin.file:
+        path: $HOME/kubernetes
+        state: absent
+
+    - name: Remove env file
+      ansible.builtin.file:
+        path: $HOME/.env
+        state: absent 
