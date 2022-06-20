@@ -52,7 +52,7 @@ spec:
             - --certificatesresolvers.lencrypt.acme.storage=acme.json
 
             ## DEBUG only
-            ## - --certificatesresolvers.lencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
+            - --certificatesresolvers.lencrypt.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory
           ports:
             - name: web
               containerPort: 80
