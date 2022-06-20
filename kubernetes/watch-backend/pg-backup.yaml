@@ -7,8 +7,8 @@ metadata:
   namespace: watch-backend
 spec:
   schedule: "0 0 * * *"
+  concurrencyPolicy: Forbid
   jobTemplate:
-    concurrencyPolicy: Forbid
     spec:
       backoffLimit: 0
       template:

@@ -12,6 +12,7 @@
 - import_playbook: playbooks/08-deploy-side-services.yaml
 - import_playbook: playbooks/09-deploy-monitoring.yaml
 - import_playbook: playbooks/10-deploy-watch-backend.yaml
+- import_playbook: playbooks/11-cleanup.yaml
 
 
 
