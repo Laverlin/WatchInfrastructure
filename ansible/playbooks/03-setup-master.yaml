@@ -68,10 +68,11 @@
       ansible.builtin.file:
         path: tmp
         state: directory
+        mode: '0777'
 
     - name: Copy join command to local file
+     # become: false
       delegate_to: localhost
-      become: false
       ansible.builtin.copy:
         content: "{{ kubernetes_join_command.stdout_lines[0] }}"
-        dest: tmp/kubernetes_join_command
+        dest: /tmp/kubernetes_join_command
