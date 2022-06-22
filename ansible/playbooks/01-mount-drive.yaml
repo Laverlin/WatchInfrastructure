@@ -7,10 +7,6 @@
   become_user: root
   gather_facts: true
   tasks:
-    - name: make dir
-      ansible.builtin.file:
-        path: /shared-data
-        state: directory
 
     ## Hell of a chemistry to extract secret data from secret file
     ##
@@ -25,6 +21,11 @@
         _val: "{{ _arr.1 | trim | regex_replace('[\"]', '') }}"
       no_log: true
 
+    - name: Make shared dir
+      ansible.builtin.file:
+        path: /shared-data
+        state: directory
+
     - name: Create credentials file
       ansible.builtin.lineinfile:
         path: /etc/smbcredentials
@@ -34,12 +35,10 @@
         - "username={{ secret_vars.azure_storage_account }}"
         - "password={{ secret_vars.azure_storage_key }}"
         
-
     - name: Setup boot mount
       ansible.builtin.lineinfile:
         path: /etc/fstab
         line: "//commonblob2store.file.core.windows.net/shared-data /shared-data cifs nofail,credentials=/etc/smbcredentials,serverino,nosharesock,actimeo=30" 
-        #LABEL=data-disk /shared-data xfs defaults,nofail 0 0
 
     - name: mount 
       command: mount -a

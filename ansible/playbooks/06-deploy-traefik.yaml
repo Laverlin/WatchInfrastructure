@@ -3,12 +3,27 @@
   gather_facts: true
   tasks:
  
-    - name: Deploy Traefik
+    - name: Copy traefik setup files
+      ansible.builtin.copy:
+        src: ./../../kubernetes/traefik
+        dest: ~/kubernetes
+        force: yes 
+        
+    - name: Variable substitution
+      ansible.builtin.shell: 'sed "s|#%ACME_SERVER%#|{{ secret_vars.acme_server }}|g" $HOME/kubernetes/traefik/04-deployment-template.yaml > $HOME/kubernetes/traefik/04-deployment.yaml'
+
+    - name: Deploy Traefik Definition & secrets
       ansible.builtin.shell: "{{ item }}"
       with_items: 
         - kubectl apply -f $HOME/kubernetes/traefik/01-definitions.yaml
-        - kubectl apply -f $HOME/kubernetes/traefik/02-namespace.yaml  
-        - "kubectl create secret generic secret-data --from-env-file .env --namespace=ingress --dry-run=client -o yaml | kubectl apply -f -"
+        - "kubectl create namespace ingress --dry-run=client -o yaml | kubectl apply -f -"
+        - "[ -f .env ] && kubectl create secret generic secret-data --from-env-file .env --namespace=ingress --dry-run=client -o yaml | kubectl apply -f -"
+      register: out
+      failed_when: out.stderr != ''
+
+    - name: Deploy Traefik 
+      ansible.builtin.shell: "{{ item }}"
+      with_items:       
         - kubectl apply -f $HOME/kubernetes/traefik/03-rbac.yaml
         - kubectl apply -f $HOME/kubernetes/traefik/04-deployment.yaml
         - kubectl apply -f $HOME/kubernetes/traefik/05-service.yaml

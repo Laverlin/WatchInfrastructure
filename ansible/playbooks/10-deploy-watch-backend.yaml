@@ -3,11 +3,26 @@
   gather_facts: true
   tasks:
 
-    - name: Deploy watch backend
+    - name: Copy watch-backend setup files
+      ansible.builtin.copy:
+        src: ./../../kubernetes/watch-backend
+        dest: ~/kubernetes
+        force: yes 
+
+    - name: Variable substitution
+      ansible.builtin.shell: 'sed "s|#%DOMAIN_FQN%#|{{ secret_vars.namecom_fqn }}|g" ~/kubernetes/watch-backend/watch-api-routing-template.yaml > ~/kubernetes/watch-backend/watch-api-routing.yaml'
+
+    - name: Deploy watch backend namespace & secrets
       ansible.builtin.shell: "{{ item }}"
       with_items: 
-        - kubectl apply -f ~/kubernetes/watch-backend/00-namespace.yaml
-        - "kubectl create secret generic secret-data --from-env-file .env --namespace=watch-backend --dry-run=client -o yaml | kubectl apply -f -"
+        - "kubectl create namespace watch-backend --dry-run=client -o yaml | kubectl apply -f -"
+        - "[ -f .env ] && kubectl create secret generic secret-data --from-env-file .env --namespace=watch-backend --dry-run=client -o yaml | kubectl apply -f -"
+      register: out
+      failed_when: out.stderr != ''      
+
+    - name: Deploy watch backend containers
+      ansible.builtin.shell: "{{ item }}"
+      with_items: 
         - kubectl apply -f ~/kubernetes/watch-backend/kafka.yaml
         - kubectl apply -f ~/kubernetes/watch-backend/postgres.yaml
         - kubectl apply -f ~/kubernetes/watch-backend/restore-backup.yaml

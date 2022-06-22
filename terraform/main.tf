@@ -21,6 +21,7 @@ variable "namecom_fqn" {}
 variable "namecom_host" {}
 variable "namecom_domain" {}
 variable "namecom_entry_id" {}
+variable "acme_server" {}
 
 variable "env_postgress_user" {}
 variable "env_postgress_password" {}
@@ -189,7 +190,7 @@ resource "azurerm_network_interface_backend_address_pool_association" "nic_pool"
 // Create availability set as basic Load Balancer can work only with VMs in the same availability set
 //
 resource "azurerm_availability_set" "avset" {
-   name                         = "avset"
+   name                         = "av-set"
    location                     = var.location
    resource_group_name          = azurerm_resource_group.rg.name
    managed                      = true
@@ -264,6 +265,24 @@ VM_PRIVATE_IP=${azurerm_network_interface.nic[0].private_ip_address}
 EOF
     destination = "/home/${var.admin_username}/.env"
   }
+  
+}
+
+resource "local_file" "inventory" {
+    content = <<EOF
+all:
+  hosts:
+    master:
+      ansible_port: 50221
+    worker:
+      ansible_port: 50222
+  vars:
+    ansible_host: ${var.namecom_fqn}
+    ansible_user: ${var.admin_username}
+    ansible_ssh_private_key_file: ${var.admin_private_key_path}
+    ansible_ssh_common_args: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+EOF
+  filename = "../ansible/inventory-current.yaml"
 }
 
 #############################################################################

@@ -48,8 +48,8 @@
       ansible.builtin.blockinfile:
         path: /etc/modules-load.d/containerd.conf 
         block: |
-              overlay
-              br_netfilter
+            overlay
+            br_netfilter
         create: yes
 
     - name: Apply sysctl params without reboot

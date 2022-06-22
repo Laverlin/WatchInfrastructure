@@ -37,14 +37,14 @@ spec:
             requests:
               memory: "200Mi"
           #     cpu: "500m"
-      #     volumeMounts:
-      #       - mountPath: /var/lib/postgresql/data
-      #         name: postgresdb
-      # volumes:
-      #   - name: postgresdb
-      #     hostPath:
-      #       path: /shared-data/persist/postgres
-      #       type: DirectoryOrCreate
+          volumeMounts:
+             - mountPath: /var/lib/postgresql/data
+               name: postgresdb
+      volumes:
+        - name: postgresdb
+          hostPath:
+            path: /postgres
+            type: DirectoryOrCreate
 ---
 
 # service

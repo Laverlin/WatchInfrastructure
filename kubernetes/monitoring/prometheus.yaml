@@ -84,7 +84,7 @@ spec:
             runAsUser: 0
             privileged: true
           resources:
-            limits:
+            requests:
               memory: "100Mi"
           #     cpu: "250m"
       volumes:

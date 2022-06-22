@@ -8,15 +8,10 @@
   gather_facts: true
   tasks:
 
-    - name: Upload kubernetes resources
-      become_user: "{{ ansible_user }}"
-      ansible.builtin.copy:
-        src: ./../../kubernetes
-        dest: $HOME/
-        remote_src: no
-
+    ## Init Cluster
+    ##
     - name: Intilizing Kubernetes Cluster
-      command: "kubeadm init --pod-network-cidr=10.244.0.0/16 --cri-socket=unix:///run/containerd/containerd.sock"
+      command: "kubeadm init --pod-network-cidr=10.244.0.0/16 --cri-socket=unix:///run/containerd/containerd.sock --apiserver-cert-extra-sans={{ secret_vars.namecom_fqn }}"
       args:
         creates: /etc/kubernetes/manifests/kube-apiserver.yaml
 
@@ -45,12 +40,14 @@
     ## install kube network
     ##
     - name: Remove mater/control roles
-      become_user: "{{ ansible_user }}"
+      #become_user: "{{ ansible_user }}"
+      become: false
       ignore_errors: true
       command: "kubectl taint nodes --all node-role.kubernetes.io/control-plane- node-role.kubernetes.io/master-"
 
     - name: Create Pod Network & RBAC.
-      become_user: "{{ ansible_user }}"
+      #become_user: "{{ ansible_user }}"
+      become: false
       ansible.builtin.command: "{{ item }}"
       with_items:
          - kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml 
@@ -62,17 +59,14 @@
     - debug:
         msg: "{{ kubernetes_join_command.stdout }}"
 
-    - name: Create local tmp
-      delegate_to: localhost
-      become: false
-      ansible.builtin.file:
-        path: tmp
+    - name: Make sure ~/tmp is exists
+      file:
+        path: ~/tmp
         state: directory
-        mode: '0777'
 
     - name: Copy join command to local file
-     # become: false
+      become: false
       delegate_to: localhost
       ansible.builtin.copy:
         content: "{{ kubernetes_join_command.stdout_lines[0] }}"
-        dest: /tmp/kubernetes_join_command
+        dest: ~/tmp/kubernetes_join_command

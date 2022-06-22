@@ -3,12 +3,18 @@
   gather_facts: true
   tasks:
 
-    - name: Remove kubernetes deployments
-      ansible.builtin.file:
-        path: $HOME/kubernetes
-        state: absent
+    # - name: Remove kubernetes deployments
+    #   ansible.builtin.file:
+    #     path: $HOME/kubernetes
+    #     state: absent
 
     - name: Remove env file
       ansible.builtin.file:
         path: $HOME/.env
+        state: absent 
+
+    - name: Remove env file
+      ansible.builtin.file:
+        delegate_to: localhost
+        path: $HOME/tmp/kubernetes_join_command
         state: absent 

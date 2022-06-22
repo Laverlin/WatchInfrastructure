@@ -3,12 +3,25 @@
   gather_facts: true
   tasks:
 
-    - name: Deploy node-exporter
+    - name: Copy monitoring setup files
+      ansible.builtin.copy:
+        src: ./../../kubernetes/monitoring
+        dest: ~/kubernetes
+        force: yes 
+        
+    - name: Deploy monitoring secrets & namespace
       ansible.builtin.shell: "{{ item }}"
       with_items: 
-        - kubectl apply -f ~/kubernetes/monitoring/00-namespace.yaml
+        - "kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -"
+        - "[ -f .env ] && kubectl create secret generic secret-data --from-env-file .env --namespace=monitoring --dry-run=client -o yaml | kubectl apply -f -"
+      register: out
+      failed_when: out.stderr != ''
+
+    - name: Deploy monitoring
+      ansible.builtin.shell: "{{ item }}"
+      with_items:
+        - kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.6.0/aio/deploy/recommended.yaml         
         - kubectl apply -f ~/kubernetes/monitoring/node-exporter.yaml
-        - "kubectl create secret generic secret-data --from-env-file .env --namespace=monitoring --dry-run=client -o yaml | kubectl apply -f -"
         - kubectl apply -f ~/kubernetes/monitoring/dashboard-k8s.yaml
         - kubectl apply -f ~/kubernetes/monitoring/open-telemetry.yaml
         - kubectl apply -f ~/kubernetes/monitoring/zipkin.yaml

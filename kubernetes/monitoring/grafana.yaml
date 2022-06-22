@@ -40,7 +40,7 @@ spec:
             - name: grafana-dashboard
               mountPath: /var/lib/grafana/dashboards
           resources:
-            limits:
+            requests:
                memory: "200Mi"
       volumes:
         - name: grafana-provision
