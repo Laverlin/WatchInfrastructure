@@ -33,9 +33,9 @@ spec:
                   key: NAMECOM_USER
           args:
             - --api.insecure
-            - --accesslog
+#            - --accesslog
             - --log.filePath=/logs/debug.log
-            - --log.level=DEBUG
+#            - --log.level=DEBUG
             - --entrypoints.web.Address=:80
             - --entrypoints.websecure.Address=:443
             - --entrypoints.web.http.redirections.entryPoint.to=websecure

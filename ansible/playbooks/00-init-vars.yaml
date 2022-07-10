@@ -1,0 +1,19 @@
+## Import secret vars
+##
+- name: Set secret vars
+  hosts: all
+  gather_facts: true
+  tasks:
+
+    ## Hell of a chemistry to extract secret data from secret file
+    ##
+    - name: Extract secret data from secret file
+      set_fact:
+        secret_vars: "{{ secret_vars|d({})|combine({_key: _val}) }}"
+      loop: "{{ lookup('file', './../../terraform/secret.auto.tfvars').split('\n') }}"
+      when: item is match('(?!\s*#).* = .*')
+      vars:
+        _arr: "{{ item.split(' = ') }}"
+        _key: "{{ _arr.0 | trim  }}"
+        _val: "{{ _arr.1 | trim | regex_replace('[\"]', '') }}"
+      no_log: true

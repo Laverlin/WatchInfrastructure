@@ -1,0 +1,2 @@
+- import_playbook: playbooks/00-init-vars.yaml
+- import_playbook: playbooks/10-deploy-watch-backend.yaml
