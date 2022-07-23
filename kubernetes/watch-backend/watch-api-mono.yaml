@@ -54,7 +54,25 @@ spec:
           ports:
             - containerPort: 80
           env:
-            - name: PostgresProviderSettings_Server
+            # - name: MsSqlProviderSettings__Server
+            #   value: mssql-watchbackend.database.windows.net
+            # - name: MsSqlProviderSettings__UserId
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: secret-data
+            #       key: MSSQL_USER
+            # - name: MsSqlProviderSettings__Password
+            #   valueFrom: 
+            #     secretKeyRef:
+            #       name: secret-data
+            #       key: MSSQL_PASSWORD
+            - name: FaceSettings__DisableMsExport
+              value: "true"
+
+            - name: FaceSettings__IsPgExportDisabled
+              value: "false"
+
+            - name: PostgresProviderSettings__Server
               value: pg-server
             - name: FaceSettings__LocationKey
               valueFrom:
@@ -105,9 +123,11 @@ spec:
                   key: APP_INSIGHTS_KEY
             - name: Serilog__WriteTo__1__Args__serverUrl
               value: http://seq.monitoring:5341
+            - name: Serilog__WriteTo__2__Args__uri
+              value: http://loki.monitoring:3100
           resources:
             requests:
-              memory: "100Mi"
+              memory: "200Mi"
 ---
 
 # Service
@@ -122,38 +142,4 @@ spec:
     app: watch-api-mono
   ports:
     - port: 88
----
 
-# Middleware
-#
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: mono-redirect
-  namespace: watch-backend
-spec:
- replacePathRegex:
-    regex: ^/mono/(.*)
-    replacement: /$1
----
-
-# Route
-#
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  name: watch-api-mono
-  namespace: watch-backend
-spec:
-  entryPoints:
-    - websecure
-  routes:
-  - match: PathPrefix(`/mono`)
-    kind: Rule
-    middlewares:
-    - name: mono-redirect    
-    services:
-    - name: watch-api-mono
-      port: 88
-  tls:
-    certResolver: lencrypt

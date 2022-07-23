@@ -25,8 +25,8 @@
       with_items: 
         - kubectl apply -f ~/kubernetes/watch-backend/kafka.yaml
         - kubectl apply -f ~/kubernetes/watch-backend/postgres.yaml
-        - kubectl apply -f ~/kubernetes/watch-backend/restore-backup.yaml
+        #- kubectl apply -f ~/kubernetes/watch-backend/restore-backup.yaml
         - kubectl apply -f ~/kubernetes/watch-backend/watch-api-mono.yaml
         - kubectl apply -f ~/kubernetes/watch-backend/watch-api-micro.yaml
         - kubectl apply -f ~/kubernetes/watch-backend/watch-api-routing.yaml
-        - kubectl apply -f ~/kubernetes/watch-backend/pg-backup.yaml 
+        - kubectl apply -f ~/kubernetes/watch-backend/pg-backup.yaml

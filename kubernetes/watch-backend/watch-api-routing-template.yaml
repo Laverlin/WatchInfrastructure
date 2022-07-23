@@ -1,6 +1,7 @@
 
-# default route to legacy server
-#
+#####################################
+## Default Route to legacy cerver (/)
+##
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
@@ -16,13 +17,13 @@ spec:
     - name: watch-api-mono
       port: 88
   tls:
-    certResolver: lencrypt
     domains:                       
-    - main: #%DOMAIN_FQN%# #kuber.ivan-b.com
+      - main: #%DOMAIN_FQN%# #kuber.ivan-b.com
 ---
 
-# Canary deployment watch-api routes
-#
+#####################################
+## Canary deployment watch-api routes
+##
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
@@ -39,7 +40,8 @@ spec:
       port: 88
       kind: TraefikService
   tls:
-    certResolver: lencrypt
+      domains:                       
+        - main: #%DOMAIN_FQN%#
 ---
 
 apiVersion: traefik.containo.us/v1alpha1
@@ -47,14 +49,90 @@ kind: TraefikService
 metadata:
   name: watch-api-wrr
   namespace: watch-backend
-
 spec:
   weighted:
     services:
       - name: watch-api-mono
         port: 88
-        weight: 7
+        weight: 0
       - name: watch-api-micro
         port: 88
-        weight: 3
+        weight: 1
+---
 
+#####################################
+## Direct Route to MONO
+##
+## Middleware
+##
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: micro-redirect
+  namespace: watch-backend
+spec:
+ replacePathRegex:
+    regex: ^/micro/(.*)
+    replacement: /$1
+---
+
+## Route Rule
+##
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: watch-api-micro
+  namespace: watch-backend
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: PathPrefix(`/micro`)
+    kind: Rule
+    middlewares:
+    - name: micro-redirect
+    services:
+    - name: watch-api-micro
+      port: 88
+  tls:
+    domains:                       
+      - main: #%DOMAIN_FQN%#
+---
+
+#####################################
+## Direct Route to MONO
+##
+## Middleware
+##
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: mono-redirect
+  namespace: watch-backend
+spec:
+ replacePathRegex:
+    regex: ^/mono/(.*)
+    replacement: /$1
+---
+
+## Route
+##
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: watch-api-mono
+  namespace: watch-backend
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: PathPrefix(`/mono`)
+    kind: Rule
+    middlewares:
+    - name: mono-redirect    
+    services:
+    - name: watch-api-mono
+      port: 88
+  tls:
+    domains:                       
+      - main: #%DOMAIN_FQN%#

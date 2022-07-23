@@ -22,8 +22,16 @@ spec:
             - containerPort: 3000
           imagePullPolicy: 'IfNotPresent'
           env:
+            - name: GF_DATABASE_URL
+              value: sqlite3:///var/lib/grafana/grafana.db?cache=shared&mode=rwc&_journal_mode=WAL
             - name: GF_INSTALL_PLUGINS
               value: grafana-piechart-panel,grafana-worldmap-panel
+            - name: GF_AUTH_ANONYMOUS_ENABLED
+              value: "true"
+            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+              value: "Admin"
+            - name: GF_AUTH_DISABLE_LOGIN_FORM
+              value: "true"
             - name: PG_USER
               valueFrom:
                 secretKeyRef:
@@ -35,22 +43,25 @@ spec:
                   name: secret-data
                   key: PG_PASS
           volumeMounts:
-            - name: grafana-provision
-              mountPath: /etc/grafana/provisioning
-            - name: grafana-dashboard
-              mountPath: /var/lib/grafana/dashboards
+            - name: grafana-config
+              mountPath: /etc/grafana
+            - name: grafana-data
+              mountPath: /var/lib/grafana
+          securityContext:
+            runAsUser: 0
+            privileged: true
           resources:
             requests:
                memory: "200Mi"
       volumes:
-        - name: grafana-provision
+        - name: grafana-config
           hostPath:
-            path: /shared-data/persist/grafana/provisioning
+            path: /shared-data/configs/grafana
             type: Directory
-        - name: grafana-dashboard
+        - name: grafana-data
           hostPath:
-            path: /shared-data/persist/grafana/dashboards
-            type: Directory
+            path: /shared-data/persist/grafana
+            type: DirectoryOrCreate
 ---
 
 # service

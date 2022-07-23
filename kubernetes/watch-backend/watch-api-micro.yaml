@@ -32,11 +32,6 @@ spec:
           image: nginx:alpine
           ports: 
             - containerPort: 88
-          # env:
-          #   - name: NGINX_ENVSUBST_TEMPLATE_DIR
-          #     value: /etc/nginx/conf.d
-          #   - name: WS_HOST_NAME
-          #     value: watch-api-micro
           volumeMounts:
             - name: nginx-config
               mountPath: /etc/nginx/conf.d
@@ -54,8 +49,12 @@ spec:
           ports:
             - containerPort: 80
           env:
+            # - name: Serilog__MinimumLevel__Override__IB
+            #   value: Debug
             - name: Serilog__WriteTo__0__Args__serverUrl
               value: http://seq.monitoring:5341
+            - name: Serilog__WriteTo__1__Args__uri
+              value: http://loki.monitoring:3100
             - name: ApiConfiguration__OpenTelemetryCollectorUrl
               value: http://open-telemetry.monitoring:4317
             - name: ApiConfiguration__AuthSettings__Token
@@ -82,45 +81,7 @@ spec:
     app: watch-api-micro
   ports:
     - port: 88
----
 
-############## 
-## Route
-##
-
-## middleware
-##
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: micro-redirect
-  namespace: watch-backend
-spec:
- replacePathRegex:
-    regex: ^/micro/(.*)
-    replacement: /$1
-
----
-# Route
-#
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  name: watch-api-micro
-  namespace: watch-backend
-spec:
-  entryPoints:
-    - websecure
-  routes:
-  - match: PathPrefix(`/micro`)
-    kind: Rule
-    middlewares:
-    - name: micro-redirect
-    services:
-    - name: watch-api-micro
-      port: 88
-  tls:
-    certResolver: lencrypt
 
 ---
 # location handler
@@ -273,7 +234,7 @@ spec:
             - name: DbSinkConfiguration__OpenTelemetryCollectorUrl
               value: http://open-telemetry.monitoring:4317
             - name: KafkaConfiguration__BootstrapServers
-              value: kafka:9092              
+              value: kafka:9092             
             - name: PgProviderConfiguration__server
               value: pg-server.watch-backend
             - name: PgProviderConfiguration__UserId

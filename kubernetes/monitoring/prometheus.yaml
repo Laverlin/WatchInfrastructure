@@ -9,6 +9,8 @@ rules:
   resources:
   - nodes
   - nodes/metrics
+  - nodes/proxy
+  - nodes/stats
   - services
   - endpoints
   - pods
@@ -22,7 +24,7 @@ rules:
   resources:
   - ingresses
   verbs: ["get", "list", "watch"]
-- nonResourceURLs: ["/metrics"]
+- nonResourceURLs: ["/metrics", "/metrics/cadvisor"]
   verbs: ["get"]
 ---
 
@@ -112,3 +114,5 @@ spec:
   - name: prom-port
     protocol: TCP
     port: 9090
+    nodePort: 30909
+  type: NodePort

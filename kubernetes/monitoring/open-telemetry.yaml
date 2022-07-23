@@ -17,13 +17,13 @@ spec:
     spec:
       containers:
         - name: open-telemetry
-          image: otel/opentelemetry-collector
-#          command: ["--config=/etc/otel-collector-config.yaml"]
+          image: otel/opentelemetry-collector:latest
           ports:
             - containerPort: 4317
             - containerPort: 8889
             - containerPort: 8888
-          imagePullPolicy: 'IfNotPresent'
+            - containerPort: 9411
+          imagePullPolicy: 'Always'
           resources:
             requests:
               memory: "50Mi"
@@ -60,6 +60,9 @@ spec:
   - name: grps-receiver
     protocol: TCP
     port: 4317
+  - name: zipkin-receiver
+    protocol: TCP
+    port: 9411
   - name: prom-metrics
     port: 8889
   - name: self-metrics

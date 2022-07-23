@@ -10,7 +10,10 @@
         force: yes 
         
     - name: Variable substitution
-      ansible.builtin.shell: 'sed "s|#%ACME_SERVER%#|{{ secret_vars.acme_server }}|g" $HOME/kubernetes/traefik/04-deployment-template.yaml > $HOME/kubernetes/traefik/04-deployment.yaml'
+      ansible.builtin.shell: "{{ item }}"
+      with_items:
+        - 'sed "s|#%ACME_SERVER%#|{{ secret_vars.acme_server }}|g" ~/kubernetes/traefik/04-deployment-template.yaml > ~/kubernetes/traefik/04-deployment.yaml'
+        - 'sed "s|#%DOMAIN_NAME%#|{{ secret_vars.domain_name }}|g" ~/kubernetes/traefik/00-issue-certificate-template.yaml > ~/kubernetes/traefik/00-issue-certificate.yaml'
 
     - name: Deploy Traefik Definition & secrets
       ansible.builtin.shell: "{{ item }}"
@@ -24,6 +27,7 @@
     - name: Deploy Traefik 
       ansible.builtin.shell: "{{ item }}"
       with_items:       
+        - kubectl apply -f $HOME/kubernetes/traefik/00-issue-certificate.yaml
         - kubectl apply -f $HOME/kubernetes/traefik/03-rbac.yaml
         - kubectl apply -f $HOME/kubernetes/traefik/04-deployment.yaml
         - kubectl apply -f $HOME/kubernetes/traefik/05-service.yaml

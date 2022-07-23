@@ -3,7 +3,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: restore-backup
+  name: restore-backup2
   namespace: watch-backend
 spec:
   ttlSecondsAfterFinished: 600
@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
       - name: restore-backup
-        image: ilaverlin/pg-az-backup
+        image: ilaverlin/pg-az-backup:latest
         env:
         - name: POSTGRES_HOST
           value: pg-server

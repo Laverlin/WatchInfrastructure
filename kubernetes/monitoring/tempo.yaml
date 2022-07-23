@@ -1,0 +1,70 @@
+  
+# tempo pod deployment
+#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tempo
+  template:
+    metadata:
+      labels:
+        app: tempo
+    spec:
+      containers:
+        - name: tempo
+          image: grafana/tempo:latest
+          args:
+            - -config.file=/etc/tempo.yaml
+          ports:
+            - name: tempo-port
+              containerPort: 3200
+            - name: otlp-grpc-port
+              containerPort: 55680
+            - name: otlp-http-port
+              containerPort: 55681
+          imagePullPolicy: 'IfNotPresent'
+
+          volumeMounts:
+            - name: tempo-config
+              mountPath: /etc/tempo.yaml
+            - name: tempo-data
+              mountPath: /tmp/tempo/
+          resources:
+            requests:
+              memory: "100Mi"
+          #     cpu: "250m"
+      volumes:
+        - name: tempo-config
+          hostPath:
+            path: /shared-data/configs/tempo/tempo.yaml
+            type: File
+        - name: tempo-data
+          hostPath:
+            path: /shared-data/persist/tempo
+            type: DirectoryOrCreate
+---
+  
+apiVersion: v1
+kind: Service
+metadata:
+  name: tempo
+  namespace: monitoring
+spec:
+  selector:
+    app: tempo
+  ports:
+    - name: tempo-port
+      protocol: TCP
+      port: 3200  
+    - name: otel-grpc-port
+      protocol: TCP
+      port: 55680  
+    - name: otel-http-port
+      protocol: TCP
+      port: 55681  

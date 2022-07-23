@@ -37,9 +37,14 @@
         path: /home/{{ ansible_user }}/.kube/cache
         state: absent
 
+    - name: Deploy Cloud Controller
+      ansible.builtin.shell: "{{ item }}"
+      with_items:
+        - kubectl apply -f ~/kubernetes/kube-system/cloud-controller.yaml
+
     ## install kube network
     ##
-    - name: Remove mater/control roles
+    - name: Remove master/control roles
       #become_user: "{{ ansible_user }}"
       become: false
       ignore_errors: true
@@ -51,6 +56,20 @@
       ansible.builtin.command: "{{ item }}"
       with_items:
          - kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml 
+
+    - name: Install Azure Disk drivers
+      ansible.builtin.shell: "{{ item }}"
+      with_items:
+        - kubectl create configmap azure-cred-file --from-literal=path="/etc/kubernetes/cloud-config/azure.json" -n kube-system
+        - curl -skSL https://raw.githubusercontent.com/kubernetes-sigs/azuredisk-csi-driver/v1.20.0/deploy/install-driver.sh | bash -s v1.20.0 snapshot --
+
+    - name: Variable substitution
+      ansible.builtin.shell: 'sed "s|#%AZURE_DISK%#|{{ secret_vars.azure_disk }}|g" ~/kubernetes/kube-system/azure-disk-template.yaml > ~/kubernetes/kube-system/azure-disk.yaml'   
+
+    - name: Install Azure Disk
+      ansible.builtin.shell: "{{ item }}"
+      with_items:
+        - kubectl apply -f ~/kubernetes/kube-system/cloud-controller.yaml
 
     - name: Get the token for joining the nodes with Kuberentes master.
       shell: "kubeadm token create  --print-join-command"

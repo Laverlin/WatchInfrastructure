@@ -1,0 +1,6 @@
+tls:
+  certificates:
+    - certFile: /etc/ssl/ivan-b.full.cert
+      keyFile: /etc/ssl/ivan-b.key.pem
+    # - certFile: /etc/ssl/certificate.crt
+    #   keyFile: /etc/ssl/private.key

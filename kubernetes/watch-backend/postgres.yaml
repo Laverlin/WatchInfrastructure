@@ -1,3 +1,5 @@
+
+
 # Postgres deployment
 #
 apiVersion: apps/v1
@@ -15,7 +17,6 @@ spec:
       labels:
         app: postgres
     spec:
-      nodeName: "montalcino-master-vm"
       containers:
         - name: pg-server
           image: postgres:alpine
@@ -35,16 +36,22 @@ spec:
                   key: PG_PASS
           resources:
             requests:
-              memory: "200Mi"
-          #     cpu: "500m"
+              memory: "100Mi"
+              cpu: ".2"
+            limits:
+              memory: "400Mi"
+              cpu: ".9"
+          securityContext:
+            runAsUser: 0
+            privileged: true
           volumeMounts:
              - mountPath: /var/lib/postgresql/data
-               name: postgresdb
+               name: postgres-data
+               subPath: pg-data
       volumes:
-        - name: postgresdb
-          hostPath:
-            path: /postgres
-            type: DirectoryOrCreate
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: pvc-azuredisk
 ---
 
 # service

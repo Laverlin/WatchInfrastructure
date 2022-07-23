@@ -1,0 +1,3 @@
+- import_playbook: playbooks/00-init-vars.yaml
+- import_playbook: playbooks/05-copy-configs.yaml
+- import_playbook: playbooks/06-deploy-traefik.yaml

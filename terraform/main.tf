@@ -25,6 +25,10 @@ variable "acme_server" {}
 
 variable "env_postgress_user" {}
 variable "env_postgress_password" {}
+
+variable "mssql_user" {}
+variable "mssql_password" {}
+
 variable "vpn_pre_shared_key" {}
 variable "vpn_username" {}
 variable "vpn_password" {}
@@ -38,19 +42,17 @@ variable "telegram_yas_bot_key" {}
 variable "telegram_chat_id" {}
 variable "app_insights_key" {}
 
+variable "project_name" {}
+variable azure_resourcegroup {}
+variable azure_vnet {}
+variable azure_subnet {}
+variable azure_nsg {}
+
+variable "location" {}
+
 variable "node_count" {
   type = number
   default = 2
-}
-
-variable "project_name" { 
-  type = string 
-  default = "montalcino"
-}
-
-variable "location" {
-  type = string
-  default = "West Europe"
 }
 
 variable "vm_size" {
@@ -77,7 +79,7 @@ provider "azurerm" {
 // Resource Group
 //
 resource "azurerm_resource_group" "rg" {
-  name     = "${var.project_name}-rg"
+  name     = "${var.azure_resourcegroup}"
   location = var.location
   tags = {
       project = var.project_name
@@ -87,7 +89,7 @@ resource "azurerm_resource_group" "rg" {
 // Virtual Network
 //
 resource "azurerm_virtual_network" "vnet" {
-    name                = "${var.project_name}-vnet"
+    name                = "${var.azure_vnet}"
     address_space       = ["10.12.0.0/16"]
     location            = var.location
     resource_group_name = azurerm_resource_group.rg.name
@@ -100,7 +102,7 @@ resource "azurerm_virtual_network" "vnet" {
 // Subnet
 //
 resource "azurerm_subnet" "subnet" {
-    name                 = "${var.project_name}-subnet"
+    name                 = "${var.azure_subnet}"
     resource_group_name  = azurerm_resource_group.rg.name
     virtual_network_name = azurerm_virtual_network.vnet.name
     address_prefixes       = ["10.12.0.0/24"]
@@ -248,6 +250,8 @@ NAMECOM_TOKEN=${var.namecom_token}
 DOMAIN_NAME=${var.namecom_fqn}
 PG_USER=${var.env_postgress_user}
 PG_PASS=${var.env_postgress_password}
+MSSQL_USER=${var.mssql_user}
+MSSQL_PASSWORD=${var.mssql_password}
 AZ_STORAGE_ACCOUNT=${var.azure_storage_account}
 AZ_SAS_TOKEN=${var.azure_sas_token}
 AZ_CONTAINER_NAME=${var.azure_container_name}

@@ -1,0 +1,62 @@
+  
+# tempo pod deployment
+#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      containers:
+        - name: loki
+          image: grafana/loki:latest
+          args:
+            - -config.file=/etc/loki/config.yaml
+          ports:
+            - containerPort: 3100
+          imagePullPolicy: 'IfNotPresent'
+
+          volumeMounts:
+            - name: loki-config
+              mountPath: /etc/loki/config.yaml
+            - name: loki-data
+              mountPath: /tmp/loki/
+          securityContext:
+            runAsUser: 0
+            privileged: true
+          resources:
+            requests:
+              memory: "200Mi"
+              cpu: "0.1"
+      volumes:
+        - name: loki-config
+          hostPath:
+            path: /shared-data/configs/loki/config.yaml
+            type: File
+        - name: loki-data
+          hostPath:
+            path: /shared-data/persist/loki
+            type: DirectoryOrCreate
+---
+  
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki
+  namespace: monitoring
+spec:
+  selector:
+    app: loki
+  ports:
+    - name: loki-port
+      protocol: TCP
+      port: 3100  

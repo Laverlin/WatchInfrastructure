@@ -24,8 +24,13 @@
         - kubectl apply -f ~/kubernetes/monitoring/node-exporter.yaml
         - kubectl apply -f ~/kubernetes/monitoring/dashboard-k8s.yaml
         - kubectl apply -f ~/kubernetes/monitoring/open-telemetry.yaml
-        - kubectl apply -f ~/kubernetes/monitoring/zipkin.yaml
+#        - kubectl apply -f ~/kubernetes/monitoring/zipkin.yaml
         - kubectl apply -f ~/kubernetes/monitoring/prometheus.yaml
         - kubectl apply -f ~/kubernetes/monitoring/grafana.yaml
-        - kubectl apply -f ~/kubernetes/monitoring/seq.yaml
+#        - kubectl apply -f ~/kubernetes/monitoring/seq.yaml
         - kubectl apply -f ~/kubernetes/monitoring/kafka-ui.yaml
+        - kubectl apply -f ~/kubernetes/monitoring/tempo.yaml
+        - kubectl apply -f ~/kubernetes/monitoring/loki.yaml
+        - kubectl apply -f ~/kubernetes/monitoring/metrics-server.yaml
+        - kubectl apply -f ~/kubernetes/monitoring/kube-state-metrics.yaml
+
