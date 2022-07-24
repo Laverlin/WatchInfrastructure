@@ -30,8 +30,4 @@
         dest: /shared-data/persist
         force: no # But the grafana dashboards we want to copy only once (!)
 
-
-    
-    # - name: Change permission to shaed folder
-    #   command: chmod -R a+rw /shared-data/persist
         

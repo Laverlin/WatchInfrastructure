@@ -14,7 +14,7 @@
         state: absent 
 
     - name: Remove env file
+      delegate_to: localhost
       ansible.builtin.file:
-        delegate_to: localhost
         path: $HOME/tmp/kubernetes_join_command
         state: absent 
