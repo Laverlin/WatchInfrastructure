@@ -1,4 +1,17 @@
-
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvc-azuredisk
+  namespace: watch-backend
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 30Gi
+  volumeName: pv-azuredisk
+  storageClassName: managed-csi
+---
 
 # Postgres deployment
 #

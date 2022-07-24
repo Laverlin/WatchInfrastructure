@@ -2,7 +2,6 @@ apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: pv-azuredisk
-  namespace: watch-backend
 spec:
   capacity:
     storage: 30Gi
@@ -13,22 +12,7 @@ spec:
   csi:
     driver: disk.csi.azure.com
     readOnly: false
-    volumeHandle: #%AZURE_DISK%# 
+    volumeHandle: "#%AZURE_DISK%#"
     volumeAttributes:
       fsType: ext4
----
-
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: pvc-azuredisk
-  namespace: watch-backend
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 30Gi
-  volumeName: pv-azuredisk
-  storageClassName: managed-csi
 ---

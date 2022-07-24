@@ -129,28 +129,25 @@
 
     ## Setup azure config file
     ##
-    - name: Setup azure config file
-      hosts: all
-      become: true
-      become_method: sudo
-      become_user: root
-      gather_facts: true
-      tasks:
+    - name: Create cloud-config folder
+      ansible.builtin.file:
+        path: /etc/kubernetes/cloud-config
+        state: directory
 
-        - name: Create file
-          copy:
-            dest: /etc/kubernetes/cloud-config/azure.json 
-            force: yes
-            content: |
-              {
-                "cloud": "AzurePublicCloud",
-                "tenantId": "{{secret_vars.azure_tenant_id}}",
-                "subscriptionId": "{{secret_vars.azure_subscription_id}}",
-                "aadClientId": "{{secret_vars.azure_client_id}}",
-                "aadClientSecret": "{{secret_vars.azure_client_secret}}",
-                "resourceGroup": "{{secret_vars.azure_resourcegroup}}",
-                "location": "{{secret_vars.location}}",
-                "subnetName": "{{secret_vars.azure_subnet}}",
-                "securityGroupName": "{{secret_vars.azure_nsg}}",
-                "vnetName": "{{secret_vars.azure_vnet}}",
-              }
+    - name: Create file
+      copy:
+        dest: /etc/kubernetes/cloud-config/azure.json 
+        force: yes
+        content: |
+          {
+            "cloud": "AzurePublicCloud",
+            "tenantId": "{{secret_vars.azure_tenant_id}}",
+            "subscriptionId": "{{secret_vars.azure_subscription_id}}",
+            "aadClientId": "{{secret_vars.azure_client_id}}",
+            "aadClientSecret": "{{secret_vars.azure_client_secret}}",
+            "resourceGroup": "{{secret_vars.azure_resourcegroup}}",
+            "location": "{{secret_vars.location}}",
+            "subnetName": "{{secret_vars.azure_subnet}}",
+            "securityGroupName": "{{secret_vars.azure_nsg}}",
+            "vnetName": "{{secret_vars.azure_vnet}}",
+          }
