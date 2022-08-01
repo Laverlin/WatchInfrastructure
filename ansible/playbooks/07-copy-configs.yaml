@@ -18,12 +18,6 @@
         dest: /shared-data/persist
         force: yes # And we always want to have a fresh wwwwroot
 
-    - name: Copy SSL config
-      ansible.builtin.copy:
-        src: ./../../persist/ssl
-        dest: /shared-data/persist
-        force: yes # and fresh ssl config
-
     - name: Copy grafana dashboards
       ansible.builtin.copy:
         src: ./../../persist/grafana

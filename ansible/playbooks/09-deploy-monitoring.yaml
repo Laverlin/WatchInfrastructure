@@ -12,25 +12,25 @@
     - name: Deploy monitoring secrets & namespace
       ansible.builtin.shell: "{{ item }}"
       with_items: 
-        - "kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -"
         - "[ -f .env ] && kubectl create secret generic secret-data --from-env-file .env --namespace=monitoring --dry-run=client -o yaml | kubectl apply -f -"
       register: out
       failed_when: out.stderr != ''
 
     - name: Deploy monitoring
       ansible.builtin.shell: "{{ item }}"
-      with_items:
-        - kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.6.0/aio/deploy/recommended.yaml         
-        - kubectl apply -f ~/kubernetes/monitoring/node-exporter.yaml
-        - kubectl apply -f ~/kubernetes/monitoring/dashboard-k8s.yaml
-        - kubectl apply -f ~/kubernetes/monitoring/open-telemetry.yaml
-#        - kubectl apply -f ~/kubernetes/monitoring/zipkin.yaml
-        - kubectl apply -f ~/kubernetes/monitoring/prometheus.yaml
-        - kubectl apply -f ~/kubernetes/monitoring/grafana.yaml
-#        - kubectl apply -f ~/kubernetes/monitoring/seq.yaml
-        - kubectl apply -f ~/kubernetes/monitoring/kafka-ui.yaml
+      with_items:    
         - kubectl apply -f ~/kubernetes/monitoring/tempo.yaml
         - kubectl apply -f ~/kubernetes/monitoring/loki.yaml
+
         - kubectl apply -f ~/kubernetes/monitoring/metrics-server.yaml
-        - kubectl apply -f ~/kubernetes/monitoring/kube-state-metrics.yaml
+        - kubectl apply -f ~/kubernetes/monitoring/kube-state-metrics.yaml   
+        - kubectl apply -f ~/kubernetes/monitoring/node-exporter.yaml
+        
+        - kubectl apply -f ~/kubernetes/monitoring/otel-collector.yaml
+        - kubectl apply -f ~/kubernetes/monitoring/prometheus.yaml
+
+        - kubectl apply -f ~/kubernetes/monitoring/grafana.yaml
+#        - kubectl apply -f ~/kubernetes/monitoring/kafka-ui.yaml
+        - kubectl apply -f ~/kubernetes/monitoring/kubernetes-dashboard.yaml
+        - kubectl apply -f ~/kubernetes/monitoring/kubernetes-dashboard-account.yaml
 

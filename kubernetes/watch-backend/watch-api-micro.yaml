@@ -56,7 +56,7 @@ spec:
             - name: Serilog__WriteTo__1__Args__uri
               value: http://loki.monitoring:3100
             - name: ApiConfiguration__OpenTelemetryCollectorUrl
-              value: http://open-telemetry.monitoring:4317
+              value: http://otel-collector.monitoring:4317
             - name: ApiConfiguration__AuthSettings__Token
               valueFrom:
                 secretKeyRef:
@@ -109,7 +109,7 @@ spec:
             - name: Serilog__WriteTo__0__Args__serverUrl
               value: http://seq.monitoring:5341
             - name: AppConfiguration__OpenTelemetryCollectorUrl
-              value: http://open-telemetry.monitoring:4317
+              value: http://otel-collector.monitoring:4317
             - name: KafkaConfiguration__BootstrapServers
               value: kafka:9092              
             - name: AppConfiguration__handler 
@@ -150,7 +150,7 @@ spec:
             - name: Serilog__WriteTo__0__Args__serverUrl
               value: http://seq.monitoring:5341
             - name: AppConfiguration__OpenTelemetryCollectorUrl
-              value: http://open-telemetry.monitoring:4317
+              value: http://otel-collector.monitoring:4317
             - name: KafkaConfiguration__BootstrapServers
               value: kafka:9092              
             - name: AppConfiguration__handler 
@@ -191,7 +191,7 @@ spec:
             - name: Serilog__WriteTo__0__Args__serverUrl
               value: http://seq.monitoring:5341
             - name: AppConfiguration__OpenTelemetryCollectorUrl
-              value: http://open-telemetry.monitoring:4317
+              value: http://otel-collector.monitoring:4317
             - name: KafkaConfiguration__BootstrapServers
               value: kafka:9092              
             - name: AppConfiguration__handler 
@@ -232,7 +232,7 @@ spec:
             - name: Serilog__WriteTo__0__Args__serverUrl
               value: http://seq.monitoring:5341
             - name: DbSinkConfiguration__OpenTelemetryCollectorUrl
-              value: http://open-telemetry.monitoring:4317
+              value: http://otel-collector.monitoring:4317
             - name: KafkaConfiguration__BootstrapServers
               value: kafka:9092             
             - name: PgProviderConfiguration__server

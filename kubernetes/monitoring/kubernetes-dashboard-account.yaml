@@ -35,35 +35,6 @@ metadata:
     kubernetes.io/service-account.name: kubedash-account
 type: kubernetes.io/service-account-token
 
----
-## Traefik routing
-##
-apiVersion: traefik.containo.us/v1alpha1
-kind: Middleware
-metadata:
-  name: dashboard-kuber
-  namespace: kubernetes-dashboard
-spec:
- replacePathRegex:
-    regex: ^/dashboard-kuber/(.*)
-    replacement: /$1
+#####
+## kubectl describe secret/kubedash-secret -n kubernetes-dashboard
 
----
-apiVersion: traefik.containo.us/v1alpha1
-kind: IngressRoute
-metadata:
-  name: dashboard-kuber
-  namespace: kubernetes-dashboard
-spec:
-  entryPoints:
-  - websecure
-  routes:
-  - match: PathPrefix(`/dashboard-kuber`)
-    kind: Rule
-    middlewares:
-    - name: dashboard-kuber
-    services:
-    - name: kubernetes-dashboard
-      port: 443
-  tls:
-    certResolver: lencrypt

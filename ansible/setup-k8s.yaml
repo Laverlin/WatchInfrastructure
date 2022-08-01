@@ -2,18 +2,18 @@
 - import_playbook: playbooks/00-init-vars.yaml
 - import_playbook: playbooks/01-mount-drive.yaml
 - import_playbook: playbooks/02-preset-k8s.yaml
-- import_playbook: playbooks/03-setup-master.yaml
-- import_playbook: playbooks/04-setup-worker.yaml
+- import_playbook: playbooks/03-node-primero.yaml
+- import_playbook: playbooks/04-node-segundo.yaml
 
-# - import_playbook: playbooks/setup-cni-plugin.yaml
+- import_playbook: playbooks/05-create-namespaces.yaml
+- import_playbook: playbooks/06-create-azure-disk.yaml
+- import_playbook: playbooks/07-copy-configs.yaml
 
-- import_playbook: playbooks/05-copy-configs.yaml
-- import_playbook: playbooks/06-deploy-traefik.yaml
-#- import_playbook: playbooks/07-deploy-kuber-dashboard.yaml
-- import_playbook: playbooks/08-deploy-side-services.yaml
+- import_playbook: playbooks/08-deploy-traefik.yaml
 - import_playbook: playbooks/09-deploy-monitoring.yaml
-- import_playbook: playbooks/10-deploy-watch-backend.yaml
-- import_playbook: playbooks/11-cleanup.yaml
+- import_playbook: playbooks/10-deploy-side-services.yaml
+- import_playbook: playbooks/11-deploy-watch-backend.yaml
+- import_playbook: playbooks/12-cleanup.yaml
 
 
 

@@ -47,6 +47,7 @@ variable azure_resourcegroup {}
 variable azure_vnet {}
 variable azure_subnet {}
 variable azure_nsg {}
+variable azure_disk {}
 
 variable "location" {}
 
@@ -55,10 +56,10 @@ variable "node_count" {
   default = 2
 }
 
-variable "vm_size" {
-  type = string
-  default = "Standard_B2s"
-}
+# variable "vm_size" {
+#   type = string
+#   default = "Standard_B2s"
+# }
 
 #############################################################################
 # PROVIDERS
@@ -205,10 +206,10 @@ resource "azurerm_availability_set" "avset" {
 module "vm-module" {
   source           = "./vm-module"
   for_each = {
-    "master" = {size = "Standard_B2s", nic-id = azurerm_network_interface.nic[0].id}
-    "worker" = {size = "Standard_B1ms", nic-id = azurerm_network_interface.nic[1].id} 
+    "barolo" = {size = "Standard_B2s", nic-id = azurerm_network_interface.nic[0].id}
+    "vouvrey" = {size = "Standard_B2s", nic-id = azurerm_network_interface.nic[1].id} 
   }
-  vm_name          = "${var.project_name}-${each.key}-vm"
+  vm_name          = "${each.key}"
   rg_name          = azurerm_resource_group.rg.name
   location         = var.location
   nic_id           = each.value.nic-id
@@ -285,6 +286,7 @@ all:
     ansible_user: ${var.admin_username}
     ansible_ssh_private_key_file: ${var.admin_private_key_path}
     ansible_ssh_common_args: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
+    public_ip: ${azurerm_public_ip.public_ip.ip_address}
 EOF
   filename = "../ansible/inventory-current.yaml"
 }

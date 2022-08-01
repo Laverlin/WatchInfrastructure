@@ -1,2 +1,2 @@
-- import_playbook: playbooks/05-copy-configs.yaml
+- import_playbook: playbooks/07-copy-configs.yaml
 

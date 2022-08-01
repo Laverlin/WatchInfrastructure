@@ -9,13 +9,9 @@
         dest: ~/kubernetes
         force: yes 
 
-    - name: Variable substitution
-      ansible.builtin.shell: 'sed "s|#%DOMAIN_FQN%#|{{ secret_vars.namecom_fqn }}|g" ~/kubernetes/watch-backend/watch-api-routing-template.yaml > ~/kubernetes/watch-backend/watch-api-routing.yaml'
-
     - name: Deploy watch backend namespace & secrets
       ansible.builtin.shell: "{{ item }}"
       with_items: 
-        - "kubectl create namespace watch-backend --dry-run=client -o yaml | kubectl apply -f -"
         - "[ -f .env ] && kubectl create secret generic secret-data --from-env-file .env --namespace=watch-backend --dry-run=client -o yaml | kubectl apply -f -"
       register: out
       failed_when: out.stderr != ''      
@@ -25,8 +21,21 @@
       with_items: 
         - kubectl apply -f ~/kubernetes/watch-backend/kafka.yaml
         - kubectl apply -f ~/kubernetes/watch-backend/postgres.yaml
-        #- kubectl apply -f ~/kubernetes/watch-backend/restore-backup.yaml
+        - kubectl apply -f ~/kubernetes/watch-backend/restore-backup.yaml
         - kubectl apply -f ~/kubernetes/watch-backend/watch-api-mono.yaml
         - kubectl apply -f ~/kubernetes/watch-backend/watch-api-micro.yaml
-        - kubectl apply -f ~/kubernetes/watch-backend/watch-api-routing.yaml
+        - kubectl apply -f ~/kubernetes/watch-backend/traefik-routing.yaml
         - kubectl apply -f ~/kubernetes/watch-backend/pg-backup.yaml
+
+
+    # - name: Copy test files
+    #   ansible.builtin.copy:
+    #     src: ./../../kubernetes/test
+    #     dest: ~/kubernetes
+    #     force: yes 
+
+    # - name: Deploy test
+    #   ansible.builtin.command: "{{ item }}"
+    #   with_items: 
+    #     - kubectl apply -f $HOME/kubernetes/test/whoami-m.yaml
+    #     - kubectl apply -f $HOME/kubernetes/test/whoami-w.yaml

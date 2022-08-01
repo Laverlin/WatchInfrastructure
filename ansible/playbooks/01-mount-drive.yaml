@@ -25,7 +25,7 @@
     - name: Setup boot mount
       ansible.builtin.lineinfile:
         path: /etc/fstab
-        line: "//commonblob2store.file.core.windows.net/shared-data /shared-data cifs nofail,nobrl,credentials=/etc/smbcredentials,serverino,nosharesock,actimeo=30" 
+        line: "//commonblob2store.file.core.windows.net/shared-data2 /shared-data cifs nofail,nobrl,credentials=/etc/smbcredentials,serverino,nosharesock,actimeo=30" 
 
     - name: mount 
       command: mount -a

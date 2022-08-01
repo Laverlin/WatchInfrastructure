@@ -1,7 +1,5 @@
 - import_playbook: playbooks/00-init-vars.yaml
-- import_playbook: playbooks/05-copy-configs.yaml
-
-# - import_playbook: playbooks/041-create-k8s-azure-config.yaml
+- import_playbook: playbooks/07-copy-configs.yaml
 
 - import_playbook: playbooks/09-deploy-monitoring.yaml
 

@@ -1,0 +1,40 @@
+- name: Deploy Traefik
+  hosts: master
+  gather_facts: true
+  tasks:
+ 
+    - name: Copy traefik setup files
+      ansible.builtin.copy:
+        src: ./../../kubernetes/traefik
+        dest: ~/kubernetes
+        force: yes       
+
+    - name: Deploy acme.sh certificate manager and issue a certificate if needed
+      ansible.builtin.shell: "{{ item }}"
+      with_items: 
+        - kubectl apply -f $HOME/kubernetes/traefik/00-setup-ssl.yaml
+        - kubectl wait deployment -n ingress acme-sh --for condition=Available=True --timeout=90s
+        - kubectl exec deploy/acme-sh -n ingress -- --set-notify --notify-hook telegram
+        - |
+          kubectl exec deploy/acme-sh -n ingress -- --issue -d {{ secret_vars.namecom_fqn }} \
+          --dns dns_namecom \
+          --server letsencrypt.org \
+          --key-file /acmeout/{{ secret_vars.namecom_fqn }}.key \
+          --fullchain-file /acmeout/{{ secret_vars.namecom_fqn }}.full \
+          --reloadcmd "kubectl create secret tls ib-ssl --key /shared-data/persist/ssl/{{ secret_vars.namecom_fqn }}.key --cert /shared-data/persist/ssl/{{ secret_vars.namecom_fqn }}.full  --dry-run=client -o yaml | kubectl apply -f -"
+      args:
+        creates: /shared-data/persist/ssl/{{ secret_vars.namecom_fqn }}.full
+
+    - name: config ssl certificate
+      ansible.builtin.shell: "{{ item }}"
+      with_items:
+        - "kubectl create secret tls ib-ssl --key /shared-data/persist/ssl/{{ secret_vars.namecom_fqn }}.key --cert /shared-data/persist/ssl/{{ secret_vars.namecom_fqn }}.full  --dry-run=client -o yaml | kubectl apply -f -"
+
+    - name: Deploy Traefik 
+      ansible.builtin.shell: "{{ item }}"
+      with_items:       
+        - kubectl apply -f $HOME/kubernetes/traefik/01-definitions.yaml
+        - kubectl apply -f $HOME/kubernetes/traefik/02-store-ssl.yaml
+        - kubectl apply -f $HOME/kubernetes/traefik/03-rbac.yaml
+        - kubectl apply -f $HOME/kubernetes/traefik/04-deployment.yaml
+        - kubectl apply -f $HOME/kubernetes/traefik/05-service.yaml

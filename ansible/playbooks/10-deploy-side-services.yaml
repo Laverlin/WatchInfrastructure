@@ -12,7 +12,6 @@
     - name: Deploy services namespace & secrets
       ansible.builtin.shell: "{{ item }}"
       with_items: 
-        - "kubectl create namespace side-services --dry-run=client -o yaml | kubectl apply -f -"
         - "[ -f .env ] && kubectl create secret generic secret-data --from-env-file .env --namespace=side-services --dry-run=client -o yaml | kubectl apply -f -"
       register: out
       failed_when: out.stderr != ''      

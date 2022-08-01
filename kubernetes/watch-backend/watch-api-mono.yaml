@@ -32,11 +32,6 @@ spec:
           image: nginx:alpine
           ports: 
             - containerPort: 88
-          # env:
-          #   - name: NGINX_ENVSUBST_TEMPLATE_DIR
-          #     value: /etc/nginx/conf.d
-          #   - name: WS_HOST_NAME
-          #     value: watch-api-mono
           volumeMounts:
             - name: nginx-config
               mountPath: /etc/nginx/conf.d
@@ -142,4 +137,5 @@ spec:
     app: watch-api-mono
   ports:
     - port: 88
+      targetPort: 88
 

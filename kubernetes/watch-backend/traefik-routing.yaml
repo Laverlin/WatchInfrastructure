@@ -1,4 +1,3 @@
-
 #####################################
 ## Default Route to legacy cerver (/)
 ##
@@ -16,9 +15,8 @@ spec:
     services:
     - name: watch-api-mono
       port: 88
-  tls:
-    domains:                       
-      - main: #%DOMAIN_FQN%# #kuber.ivan-b.com
+  tls: {}
+
 ---
 
 #####################################
@@ -39,9 +37,7 @@ spec:
     - name: watch-api-wrr
       port: 88
       kind: TraefikService
-  tls:
-      domains:                       
-        - main: #%DOMAIN_FQN%#
+  tls: {}
 ---
 
 apiVersion: traefik.containo.us/v1alpha1
@@ -54,10 +50,10 @@ spec:
     services:
       - name: watch-api-mono
         port: 88
-        weight: 0
+        weight: 5
       - name: watch-api-micro
         port: 88
-        weight: 1
+        weight: 5
 ---
 
 #####################################
@@ -94,9 +90,7 @@ spec:
     services:
     - name: watch-api-micro
       port: 88
-  tls:
-    domains:                       
-      - main: #%DOMAIN_FQN%#
+  tls: {}
 ---
 
 #####################################
@@ -133,6 +127,56 @@ spec:
     services:
     - name: watch-api-mono
       port: 88
-  tls:
-    domains:                       
-      - main: #%DOMAIN_FQN%#
+  tls: {}
+---
+
+#### Kubernetes dashboard routing
+####
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: dashboard-kuber
+  namespace: kubernetes-dashboard
+spec:
+ replacePathRegex:
+    regex: ^/dashboard/kuber(/|$)(.*)
+    replacement: /$2
+---
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: dashboard-kuber
+  namespace: kubernetes-dashboard
+spec:
+  entryPoints:
+  - websecure
+  routes:
+  - match: PathPrefix(`/dashboard/kuber/`)
+    kind: Rule
+    middlewares:
+    - name: dashboard-kuber
+    services:
+    - name: kubernetes-dashboard
+      port: 8443
+      scheme: https
+  tls: {}
+---
+
+### test routing
+###
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: test-routing
+  namespace: default
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: PathPrefix(`/whoami`)
+    kind: Rule
+    services:
+    - name: whoami
+      port: 80
+  tls: {}

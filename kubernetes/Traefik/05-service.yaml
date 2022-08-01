@@ -1,25 +1,17 @@
-# setup Nodeport
+# setup service for prometheus discovery
 #
 kind: Service
 apiVersion: v1
 metadata:
-  name: traefik-nodeport
+  name: traefik
   namespace: ingress
+  annotations:
+      prometheus.io/scrape: 'true'
+      prometheus.io/port:   '8080'
 spec:
   selector:
     app: traefik
   ports:
     - protocol: TCP
-      port: 80
-      name: web
-      nodePort: 30800
-    - protocol: TCP
-      port: 443
-      targetPort: 443
-      nodePort: 30443
-      name: secureweb
-    - protocol: TCP
       port: 8080
-      nodePort: 30808
       name: admin
-  type: NodePort

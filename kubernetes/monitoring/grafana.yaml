@@ -22,10 +22,25 @@ spec:
             - containerPort: 3000
           imagePullPolicy: 'IfNotPresent'
           env:
-            - name: GF_DATABASE_URL
-              value: sqlite3:///var/lib/grafana/grafana.db?cache=shared&mode=rwc&_journal_mode=WAL
+            # - name: GF_DATABASE_URL
+            #   value: sqlite3:///var/lib/grafana/grafana.db?cache=shared&mode=rwc&_journal_mode=WAL
+            - name: GF_DATABASE_TYPE
+              value: "postgres"
+            - name: GF_DATABASE_HOST
+              value: "pg-server.watch-backend:5432"
+            - name: GF_DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: secret-data
+                  key: PG_USER
+            - name: GF_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secret-data
+                  key: PG_PASS  
+
             - name: GF_INSTALL_PLUGINS
-              value: grafana-piechart-panel,grafana-worldmap-panel
+              value: "grafana-worldmap-panel"
             - name: GF_AUTH_ANONYMOUS_ENABLED
               value: "true"
             - name: GF_AUTH_ANONYMOUS_ORG_ROLE

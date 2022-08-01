@@ -21,10 +21,6 @@ spec:
             - containerPort: 9093
               name: controller-port
           env:
-            - name: JMXPORT
-              value: "9011"
-            - name: JMXHOST
-              value: "0.0.0.0"
             - name: KAFKA_HEAP_OPTS
               value: "-Xmx380M -Xms256M"
             - name: ALLOW_PLAINTEXT_LISTENER
@@ -45,6 +41,7 @@ spec:
               value: PLAINTEXT://:9092,CONTROLLER://:9093
             - name: KAFKA_ADVERTISED_LISTENERS
               value: PLAINTEXT://kafka.watch-backend:9092
+
           securityContext:
             runAsUser: 0
             privileged: true
@@ -54,6 +51,17 @@ spec:
           volumeMounts:
             - name: kafka-data
               mountPath: /kafka/data
+
+        - name: kafka-exporter
+          image: bitnami/kafka-exporter:latest
+          ports: 
+            - containerPort: 9308
+          args: 
+            - --kafka.server=localhost:9092
+          resources:
+            requests:
+              memory: "50Mi"
+
       volumes:
         - name: kafka-data
           hostPath:
@@ -76,3 +84,7 @@ spec:
       name: kafka-port
     - port: 9093
       name: controller-port
+    - port: 9308
+      name: exporter-port
+    - port: 5556
+      name: jmx-port

@@ -4,7 +4,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: traefik-ingress-account
+  name: traefik-account
 
 rules:
   - apiGroups:
@@ -57,7 +57,7 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   namespace: ingress
-  name: traefik-ingress-account
+  name: traefik-account
 ---
 
 # Create link role & service account 
@@ -65,12 +65,12 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: traefik-ingress-account
+  name: traefik-account
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: traefik-ingress-account
+  name: traefik-account
 subjects:
   - kind: ServiceAccount
-    name: traefik-ingress-account
+    name: traefik-account
     namespace: ingress
