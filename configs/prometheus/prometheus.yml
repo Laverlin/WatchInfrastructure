@@ -32,11 +32,8 @@ scrape_configs:
         action: keep
       - source_labels: [__meta_kubernetes_endpoint_node_name]
         regex: (.+)
-        target_label: nodename2
+        target_label: node_name
         replacement: ${1}
-      - source_labels: [__meta_kubernetes_node_name]
-        target_label: name2
-          
 
   - job_name: 'watch-server'
     static_configs:
@@ -58,6 +55,10 @@ scrape_configs:
       - source_labels: [__meta_kubernetes_pod_container_port_name]
         action: keep
         regex: admin
+      - source_labels: [__meta_kubernetes_pod_node_name]
+        regex: (.+)
+        replacement: ${1} 
+        target_label: node_name
     metric_relabel_configs:
       # - regex: '(instance|job|protocol)'
       #   action: labeldrop

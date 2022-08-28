@@ -49,11 +49,7 @@ spec:
           ports:
             - containerPort: 80
           env:
-            # - name: Serilog__MinimumLevel__Override__IB
-            #   value: Debug
-            - name: Serilog__WriteTo__0__Args__serverUrl
-              value: http://seq.monitoring:5341
-            - name: Serilog__WriteTo__1__Args__uri
+            - name: Serilog__WriteTo__0__Args__uri
               value: http://loki.monitoring:3100
             - name: ApiConfiguration__OpenTelemetryCollectorUrl
               value: http://otel-collector.monitoring:4317
@@ -64,6 +60,20 @@ spec:
                   key: WS_AUTH_TOKEN
             - name: KafkaConfiguration__BootstrapServers
               value: kafka:9092
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 15
           resources:
             requests:
               memory: "100Mi"
@@ -106,8 +116,8 @@ spec:
           image: ilaverlin/watchcluster-servicehost:latest
           imagePullPolicy: 'Always'
           env:
-            - name: Serilog__WriteTo__0__Args__serverUrl
-              value: http://seq.monitoring:5341
+            - name: Serilog__WriteTo__0__Args__uri
+              value: http://loki.monitoring:3100
             - name: AppConfiguration__OpenTelemetryCollectorUrl
               value: http://otel-collector.monitoring:4317
             - name: KafkaConfiguration__BootstrapServers
@@ -119,7 +129,20 @@ spec:
                 secretKeyRef:
                   name: secret-data
                   key: WS_LOCATION_KEY
-
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
           resources:
             requests:
               memory: "100Mi"
@@ -147,8 +170,8 @@ spec:
           image: ilaverlin/watchcluster-servicehost:latest
           imagePullPolicy: 'Always'
           env:
-            - name: Serilog__WriteTo__0__Args__serverUrl
-              value: http://seq.monitoring:5341
+            - name: Serilog__WriteTo__0__Args__uri
+              value: http://loki.monitoring:3100
             - name: AppConfiguration__OpenTelemetryCollectorUrl
               value: http://otel-collector.monitoring:4317
             - name: KafkaConfiguration__BootstrapServers
@@ -160,7 +183,20 @@ spec:
                 secretKeyRef:
                   name: secret-data
                   key: WS_OPEN_WEATHER_KEY
-
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
           resources:
             requests:
               memory: "100Mi" 
@@ -188,8 +224,8 @@ spec:
           image: ilaverlin/watchcluster-servicehost:latest
           imagePullPolicy: 'Always'
           env:
-            - name: Serilog__WriteTo__0__Args__serverUrl
-              value: http://seq.monitoring:5341
+            - name: Serilog__WriteTo__0__Args__uri
+              value: http://loki.monitoring:3100
             - name: AppConfiguration__OpenTelemetryCollectorUrl
               value: http://otel-collector.monitoring:4317
             - name: KafkaConfiguration__BootstrapServers
@@ -201,7 +237,25 @@ spec:
                 secretKeyRef:
                   name: secret-data
                   key: WS_CURRENCY_CONVERTER_KEY
-
+            - name: CurrencyExchangeConfiguration__TwelveDataKey
+              valueFrom:
+                secretKeyRef:
+                  name: secret-data
+                  key: WS_TWELVE_DATA_KEY
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
           resources:
             requests:
               memory: "100Mi"
@@ -229,8 +283,8 @@ spec:
           image: ilaverlin/watchcluster-dbsink:latest
           imagePullPolicy: 'Always'
           env:
-            - name: Serilog__WriteTo__0__Args__serverUrl
-              value: http://seq.monitoring:5341
+            - name: Serilog__WriteTo__0__Args__uri
+              value: http://loki.monitoring:3100
             - name: DbSinkConfiguration__OpenTelemetryCollectorUrl
               value: http://otel-collector.monitoring:4317
             - name: KafkaConfiguration__BootstrapServers

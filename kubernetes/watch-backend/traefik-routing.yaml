@@ -50,10 +50,10 @@ spec:
     services:
       - name: watch-api-mono
         port: 88
-        weight: 5
+        weight: 0
       - name: watch-api-micro
         port: 88
-        weight: 5
+        weight: 10
 ---
 
 #####################################
@@ -139,7 +139,7 @@ metadata:
   namespace: kubernetes-dashboard
 spec:
  replacePathRegex:
-    regex: ^/dashboard/kuber(/|$)(.*)
+    regex: ^/dashboard/kuber(/|\b)(.*)
     replacement: /$2
 ---
 

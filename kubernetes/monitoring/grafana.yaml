@@ -68,6 +68,12 @@ spec:
           resources:
             requests:
                memory: "200Mi"
+
+      initContainers:
+        - name: wait-postrges
+          image: postgres:alpine
+          command: ['sh', '-c', "until pg_isready -h pg-server.watch-backend -p 5432; do  echo waiting for pg-server.watch-backend; sleep 5; done"]
+
       volumes:
         - name: grafana-config
           hostPath:

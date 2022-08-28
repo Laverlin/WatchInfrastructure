@@ -37,6 +37,7 @@ variable "ws_location_key" {}
 variable "ws_dark_sky_key" {}
 variable "ws_open_weather_key" {}
 variable "ws_currency_converter_key" {}
+variable "ws_twelve_data_key" {}
 variable "ws_auth_token" {}
 variable "telegram_yas_bot_key" {}
 variable "telegram_chat_id" {}
@@ -48,6 +49,7 @@ variable azure_vnet {}
 variable azure_subnet {}
 variable azure_nsg {}
 variable azure_disk {}
+variable azure_storage_data {}
 
 variable "location" {}
 
@@ -261,6 +263,7 @@ WS_LOCATION_KEY=${var.ws_location_key}
 WS_DARK_SKY_KEY=${var.ws_dark_sky_key}
 WS_OPEN_WEATHER_KEY=${var.ws_open_weather_key}
 WS_CURRENCY_CONVERTER_KEY=${var.ws_currency_converter_key}
+WS_TWELVE_DATA_KEY=${var.ws_twelve_data_key}
 WS_AUTH_TOKEN=${var.ws_auth_token}
 TELEGRAM_YAS_BOT_KEY=${var.telegram_yas_bot_key}
 TELEGRAM_CHAT_ID=${var.telegram_chat_id}
