@@ -6,16 +6,19 @@ metadata:
   labels:
     app: traefik
     app.kubernetes.io/name: traefik
+    #app.kubernetes.io/component: traefik
 spec:
   selector:
     matchLabels:
       app: traefik
       app.kubernetes.io/name: traefik
+      #app.kubernetes.io/component: traefik
   template:
     metadata:
       labels:
         app: traefik
         app.kubernetes.io/name: traefik
+        #app.kubernetes.io/component: traefik
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "8080"
@@ -43,6 +46,8 @@ spec:
 
             - --ping=true
             - --metrics.prometheus=true
+            - --metrics.prometheus.addEntryPointsLabels=true
+            - --metrics.prometheus.addServicesLabels=true
             
           ports:
             - name: web
@@ -79,11 +84,11 @@ spec:
             timeoutSeconds: 2
           securityContext:
             allowPrivilegeEscalation: true
-            capabilities:
-              drop:
-              - ALL
-              add:
-              - NET_BIND_SERVICE
+            # capabilities:
+            #   drop:
+            #   - ALL
+            #   add:
+            #   - NET_BIND_SERVICE
           resources:
             requests:
               memory: "100Mi"

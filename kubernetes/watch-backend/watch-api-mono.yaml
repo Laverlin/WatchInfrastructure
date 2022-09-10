@@ -100,7 +100,7 @@ spec:
                   name: secret-data
                   key: TELEGRAM_YAS_BOT_KEY
             - name: FaceSettings__DisableYasBot
-              value: "false"
+              value: "true"
             - name: PostgresProviderSettings__UserId
               valueFrom:
                 secretKeyRef:

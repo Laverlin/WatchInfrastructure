@@ -11,6 +11,8 @@ metadata:
 spec:
   selector:
     app: traefik
+   # app.kubernetes.io/component: traefik
+    app.kubernetes.io/name: traefik
   ports:
     - protocol: TCP
       port: 8080

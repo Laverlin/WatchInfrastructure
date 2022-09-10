@@ -60,6 +60,27 @@ spec:
                   key: WS_AUTH_TOKEN
             - name: KafkaConfiguration__BootstrapServers
               value: kafka:9092
+            - name: PgProviderConfiguration__server
+              value: pg-server.watch-backend
+            - name: PgProviderConfiguration__Port
+              value: "5432"
+            - name: PgProviderConfiguration__UserId
+              valueFrom:
+                secretKeyRef:
+                  name: secret-data
+                  key: PG_USER
+            - name: PgProviderConfiguration__Password
+              valueFrom:
+                secretKeyRef:
+                  name: secret-data
+                  key: PG_PASS
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 10
           readinessProbe:
             httpGet:
               path: /health/ready
@@ -129,13 +150,13 @@ spec:
                 secretKeyRef:
                   name: secret-data
                   key: WS_LOCATION_KEY
-          readinessProbe:
+          startupProbe:
             httpGet:
               path: /health/ready
               port: 80
-              scheme: HTTP
-            initialDelaySeconds: 10
-            periodSeconds: 15
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 10
           livenessProbe:
             httpGet:
               path: /health/live
@@ -183,13 +204,13 @@ spec:
                 secretKeyRef:
                   name: secret-data
                   key: WS_OPEN_WEATHER_KEY
-          readinessProbe:
+          startupProbe:
             httpGet:
               path: /health/ready
               port: 80
-              scheme: HTTP
-            initialDelaySeconds: 10
-            periodSeconds: 15
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 10
           livenessProbe:
             httpGet:
               path: /health/live
@@ -242,13 +263,13 @@ spec:
                 secretKeyRef:
                   name: secret-data
                   key: WS_TWELVE_DATA_KEY
-          readinessProbe:
+          startupProbe:
             httpGet:
               path: /health/ready
               port: 80
-              scheme: HTTP
-            initialDelaySeconds: 10
-            periodSeconds: 15
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 10
           livenessProbe:
             httpGet:
               path: /health/live
@@ -261,7 +282,7 @@ spec:
               memory: "100Mi"
 
 ---
-# Database sink
+# YAS Bot
 #
 apiVersion: apps/v1
 kind: Deployment
@@ -301,7 +322,74 @@ spec:
                 secretKeyRef:
                   name: secret-data
                   key: PG_PASS
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+           requests:
+              memory: "50Mi"
 
+---
+# Database sink
+#
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: yas-bot
+  namespace: watch-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yas-bot
+  template:
+    metadata:
+      labels:
+        app: yas-bot
+    spec:
+      containers:
+        - name: yas-bot
+          image: ilaverlin/watchcluster-yasbot:latest
+          imagePullPolicy: 'Always'
+          env:
+            - name: Serilog__WriteTo__0__Args__uri
+              value: http://loki.monitoring:3100
+            - name: BotConfiguration__OpenTelemetryCollectorUrl
+              value: http://otel-collector.monitoring:4317
+            - name: BotConfiguration__BaseStorageApiUrl
+              value: http://watch-api-micro:88/api/v2.0/YASail/
+            - name: BotConfiguration__BotApiKey
+              valueFrom:
+                secretKeyRef:
+                  name: secret-data
+                  key: TELEGRAM_YAS_BOT_KEY
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
           resources:
            requests:
               memory: "50Mi"

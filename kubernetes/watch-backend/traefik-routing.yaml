@@ -1,6 +1,42 @@
 #####################################
-## Default Route to legacy cerver (/)
+## Default Route (/)
 ##
+# apiVersion: traefik.containo.us/v1alpha1
+# kind: IngressRoute
+# metadata:
+#   name: default-routing
+#   namespace: watch-backend
+# spec:
+#   entryPoints:
+#     - websecure
+#   routes:
+#   - match: PathPrefix(`/`)
+#     kind: Rule
+#     services:
+#     - name: watch-api-micro
+#       port: 88
+#   tls: {}
+
+# ---
+
+####################################
+# Default Route to handle error 404 (/)
+#
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: error404
+  namespace: watch-backend
+spec:
+  errors:
+    status:
+      - "404"
+    query: /error404.html
+    service:
+      name: watch-api-micro
+      port: 88
+---
+
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
@@ -10,10 +46,54 @@ spec:
   entryPoints:
     - websecure
   routes:
-  - match: PathPrefix(`/`)
+  - match: HostRegexp(`{host:.+}`)
+    kind: Rule
+    middlewares:
+    - name: error404
+    services:
+    - name: watch-api-micro
+      port: 88
+  tls: {}
+
+---
+
+#####################################
+## Route to legacy WF API
+##
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: legacywf-routing
+  namespace: watch-backend
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: PathPrefix(`/garminapi/wf-service`)
     kind: Rule
     services:
     - name: watch-api-mono
+      port: 88
+  tls: {}
+
+---
+
+#####################################
+## Route to YAS Sail app API
+##
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: yasail-routing
+  namespace: watch-backend
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: PathPrefix(`/garminapi/routelist`)
+    kind: Rule
+    services:
+    - name: watch-api-micro
       port: 88
   tls: {}
 
@@ -57,7 +137,7 @@ spec:
 ---
 
 #####################################
-## Direct Route to MONO
+## Direct Route to Micro
 ##
 ## Middleware
 ##
