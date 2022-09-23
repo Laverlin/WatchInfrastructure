@@ -9,19 +9,31 @@
         dest: ~/kubernetes
         force: yes       
 
-    - name: Deploy acme.sh certificate manager and issue a certificate if needed
+    - name: Deploy ingress secrets & namespace
       ansible.builtin.shell: "{{ item }}"
       with_items: 
-        - kubectl apply -f $HOME/kubernetes/traefik/00-setup-ssl.yaml
+        - "[ -f .env ] && kubectl create secret generic secret-data --from-env-file .env --namespace=ingress --dry-run=client -o yaml | kubectl apply -f -"
+      register: out
+      failed_when: out.stderr != ''
+
+    - name: Deploy acme.sh container
+      ansible.builtin.shell: "kubectl apply -f $HOME/kubernetes/traefik/00-setup-ssl.yaml"
+
+    - name: Initialize acme.sh and ssue a certificate if needed
+      ansible.builtin.shell: "{{ item }}"
+      with_items: 
         - kubectl wait deployment -n ingress acme-sh --for condition=Available=True --timeout=90s
         - kubectl exec deploy/acme-sh -n ingress -- --set-notify --notify-hook telegram
+        - kubectl exec deploy/acme-sh -n ingress -- curl -L -o "/kubectl" "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+        - kubectl exec deploy/acme-sh -n ingress -- chmod +x /kubectl 
+        - kubectl exec deploy/acme-sh -n ingress -- mv /kubectl /usr/local/bin/kubectl
         - |
-          kubectl exec deploy/acme-sh -n ingress -- --issue -d {{ secret_vars.namecom_fqn }} \
+          kubectl exec deploy/acme-sh -n ingress -- --issue -d {{ secret_vars.namecom_fqn }} -d *.{{ secret_vars.namecom_fqn }} \
           --dns dns_namecom \
           --server letsencrypt.org \
           --key-file /acmeout/{{ secret_vars.namecom_fqn }}.key \
           --fullchain-file /acmeout/{{ secret_vars.namecom_fqn }}.full \
-          --reloadcmd "kubectl create secret tls ib-ssl --key /shared-data/persist/ssl/{{ secret_vars.namecom_fqn }}.key --cert /shared-data/persist/ssl/{{ secret_vars.namecom_fqn }}.full  --dry-run=client -o yaml | kubectl apply -f -"
+          --reloadcmd "kubectl create secret tls ib-ssl --key /acmeout/{{ secret_vars.namecom_fqn }}.key --cert /acmeout/{{ secret_vars.namecom_fqn }}.full  --dry-run=client -o yaml | kubectl apply -f -"
       args:
         creates: /shared-data/persist/ssl/{{ secret_vars.namecom_fqn }}.full
 

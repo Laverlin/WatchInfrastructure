@@ -9,16 +9,25 @@
         dest: ~/kubernetes
         force: yes 
         
-    - name: Deploy monitoring secrets & namespace
+    - name: Deploy monitoring secrets
       ansible.builtin.shell: "{{ item }}"
       with_items: 
         - "[ -f .env ] && kubectl create secret generic secret-data --from-env-file .env --namespace=monitoring --dry-run=client -o yaml | kubectl apply -f -"
       register: out
       failed_when: out.stderr != ''
 
+    - name: create config map 
+      ansible.builtin.shell: |
+        kubectl create configmap variables --namespace=monitoring \
+          --from-literal=domain_name={{ secret_vars.namecom_fqn }} \
+          --from-literal=kd_keycloak_client_secret={{ secret_vars.kd_keycloak_client_secret }} \
+          --from-literal=gf_keycloak_client_secret={{ secret_vars.gf_keycloak_client_secret }} \
+          --dry-run=client -o yaml | kubectl apply -f - 
+
     - name: Deploy monitoring
       ansible.builtin.shell: "{{ item }}"
       with_items:    
+        - kubectl apply -f ~/kubernetes/monitoring/keycloak.yaml
         - kubectl apply -f ~/kubernetes/monitoring/tempo.yaml
         - kubectl apply -f ~/kubernetes/monitoring/loki.yaml
 
@@ -32,5 +41,5 @@
         - kubectl apply -f ~/kubernetes/monitoring/grafana.yaml
 #        - kubectl apply -f ~/kubernetes/monitoring/kafka-ui.yaml
         - kubectl apply -f ~/kubernetes/monitoring/kubernetes-dashboard.yaml
-        - kubectl apply -f ~/kubernetes/monitoring/kubernetes-dashboard-account.yaml
+      #  - kubectl apply -f ~/kubernetes/monitoring/kubernetes-dashboard-account.yaml
 
