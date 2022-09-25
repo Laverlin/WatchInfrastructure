@@ -44,6 +44,9 @@ spec:
 
             - --serverstransport.insecureskipverify=true
 
+            - --entryPoints.websecure.proxyProtocol.insecure
+            - --entryPoints.websecure.forwardedHeaders.insecure
+
             - --ping=true
             - --metrics.prometheus=true
             - --metrics.prometheus.addEntryPointsLabels=true
@@ -84,11 +87,11 @@ spec:
             timeoutSeconds: 2
           securityContext:
             allowPrivilegeEscalation: true
-            # capabilities:
-            #   drop:
-            #   - ALL
-            #   add:
-            #   - NET_BIND_SERVICE
+            capabilities:
+              drop:
+              - ALL
+              add:
+              - NET_BIND_SERVICE
           resources:
             requests:
               memory: "100Mi"

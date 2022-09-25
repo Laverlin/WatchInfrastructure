@@ -1,0 +1,95 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  namespace: monitoring
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:latest
+        args: ["start"]
+        env:
+        - name: DOMAIN_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: variables
+              key: domain_name
+        # - name: KC_HTTPS_CERTIFICATE_FILE
+        #   value: "/etc/keys/ivan-b.com.full"
+        # - name: KC_HTTPS_CERTIFICATE_KEY_FILE
+        #   value: "/etc/keys/ivan-b.com.key"
+        # - name: KC_HTTP_ENABLED
+        #   value: "true"
+        # - name: KC_FEATURES
+        #   value: "token-exchange"
+        # - name: KC_HOSTNAME_STRICT_HTTPS
+        #   value: "false"
+        # - name: KC_HOSTNAME_STRICT_BACKCHANNEL
+        #   value: "false"
+        # - name: KC_HOSTNAME_ADMIN
+        #   value: "10.12.0.4"
+        - name: KC_HOSTNAME
+          value: "sso.$(DOMAIN_NAME)"
+        #- name: KC_HOSTNAME_PATH
+        #  value: "keycloak"
+        #- name: KC_HTTP_RELATIVE_PATH
+        #  value: "/keycloak"
+        # - name: KC_HOSTNAME_STRICT
+        #   value: "false"
+        - name: KEYCLOAK_ADMIN
+          value: "admin"
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          value: "superadmin"
+        - name: KC_PROXY
+          value: "edge"
+        - name: KC_DB
+          value: "postgres"
+        - name: KC_DB_URL
+          value: "jdbc:postgresql://pg-server.watch-backend/keycloak"
+        - name: KC_DB_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: secret-data
+              key: PG_USER
+        - name: KC_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: secret-data
+              key: PG_PASS
+        ports:
+        - name: http
+          containerPort: 8080
+        # - name: https
+        #   containerPort: 8443
+        # readinessProbe:
+        #   httpGet:
+        #     path: /realms/master
+        #     port: 8080
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: keycloak
+  namespace: monitoring
+  labels:
+    app: keycloak
+spec:
+  ports:
+  - name: http
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: keycloak

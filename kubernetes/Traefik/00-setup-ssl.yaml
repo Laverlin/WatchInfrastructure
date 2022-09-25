@@ -1,3 +1,37 @@
+#  need this to gave acme.sh permission to refresh certificate
+#
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: acme-account
+  namespace: ingress
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: secret-manager
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["ib-ssl"]
+  verbs: ["*"]
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: acme-account-rb
+subjects:
+  - kind: ServiceAccount
+    name: acme-account
+roleRef:
+  kind: Role
+  name: secret-manager
+  apiGroup: rbac.authorization.k8s.io
+---
+
+
 # Install acme.sh container
 #
 kind: Deployment
@@ -17,6 +51,7 @@ spec:
       labels:
         app: acme-sh
     spec:
+      serviceAccountName: acme-account
       containers:
         - name: acme-sh
           image: neilpang/acme.sh

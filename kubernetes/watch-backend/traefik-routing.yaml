@@ -48,6 +48,7 @@ spec:
   routes:
   - match: HostRegexp(`{host:.+}`)
     kind: Rule
+    priority: 2 # set lowest priority
     middlewares:
     - name: error404
     services:
@@ -216,7 +217,7 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: Middleware
 metadata:
   name: dashboard-kuber
-  namespace: kubernetes-dashboard
+  namespace: monitoring
 spec:
  replacePathRegex:
     regex: ^/dashboard/kuber(/|\b)(.*)
@@ -227,7 +228,7 @@ apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
   name: dashboard-kuber
-  namespace: kubernetes-dashboard
+  namespace: monitoring
 spec:
   entryPoints:
   - websecure
@@ -239,7 +240,7 @@ spec:
     services:
     - name: kubernetes-dashboard
       port: 8443
-      scheme: https
+      #scheme: https
   tls: {}
 ---
 
@@ -260,3 +261,56 @@ spec:
     - name: whoami
       port: 80
   tls: {}
+
+---
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: mw-keycloak
+  namespace: monitoring
+spec:
+ replacePathRegex:
+    regex: ^/keycloak(/|\b)(.*)
+    replacement: /$2
+---
+
+### keycloak
+###
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: keycloak-routing
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`sso.ivan-b.com`) #PathPrefix(`/realms/`) || PathPrefix(`/resources/`) || PathPrefix(`/js/`)
+    kind: Rule
+    #middlewares:
+    #- name: mw-keycloak
+    services:
+    - name: keycloak
+      port: 8080
+  tls: {}
+---
+
+### dashboard grafana
+###
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: grafana-routing
+  namespace: monitoring
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: PathPrefix(`/dashboard/grafana/`)
+    kind: Rule
+    services:
+    - name: grafana
+      port: 3000
+  tls: {}
+

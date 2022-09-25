@@ -22,8 +22,11 @@ spec:
             - containerPort: 3000
           imagePullPolicy: 'IfNotPresent'
           env:
-            # - name: GF_DATABASE_URL
-            #   value: sqlite3:///var/lib/grafana/grafana.db?cache=shared&mode=rwc&_journal_mode=WAL
+            - name: DOMAIN_NAME
+              valueFrom:
+                configMapKeyRef:
+                  name: variables
+                  key: domain_name
             - name: GF_DATABASE_TYPE
               value: "postgres"
             - name: GF_DATABASE_HOST
@@ -41,12 +44,44 @@ spec:
 
             - name: GF_INSTALL_PLUGINS
               value: "grafana-worldmap-panel"
-            - name: GF_AUTH_ANONYMOUS_ENABLED
-              value: "true"
-            - name: GF_AUTH_ANONYMOUS_ORG_ROLE
-              value: "Admin"
+            # - name: GF_AUTH_ANONYMOUS_ENABLED
+            #   value: "true"
+            # - name: GF_AUTH_ANONYMOUS_ORG_ROLE
+            #   value: "Admin"
             - name: GF_AUTH_DISABLE_LOGIN_FORM
               value: "true"
+            - name: GF_AUTH_OAUTH_AUTO_LOGIN
+              value: "true"
+            - name: GF_SERVER_DOMAIN
+              value: "$(DOMAIN_NAME)"
+            - name: GF_SERVER_ROOT_URL
+              value: "https://$(DOMAIN_NAME)/dashboard/grafana/"
+            - name: GF_SERVER_SERVE_FROM_SUB_PATH
+              value: "true"
+            - name: GF_AUTH_GENERIC_OAUTH_ENABLED
+              value: "true"
+            - name: GF_AUTH_GENERIC_OAUTH_NAME
+              value: "Keycloak"
+            - name: GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP
+              value: "true"
+            - name: GF_AUTH_GENERIC_OAUTH_CLIENT_ID
+              value: "grafana"
+            - name: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
+              valueFrom:
+                configMapKeyRef:
+                  name: variables
+                  key: gf_keycloak_client_secret
+            - name: GF_AUTH_GENERIC_OAUTH_SCOPES
+              value: "profile"
+            - name: GF_AUTH_GENERIC_OAUTH_AUTH_URL
+              value: "https://sso.$(DOMAIN_NAME)/realms/dashboard/protocol/openid-connect/auth"
+            - name: GF_AUTH_GENERIC_OAUTH_TOKEN_URL
+              value: "https://sso.$(DOMAIN_NAME)/realms/dashboard/protocol/openid-connect/token"
+            - name: GF_AUTH_GENERIC_OAUTH_API_URL
+              value: "https://sso.$(DOMAIN_NAME)/realms/dashboard/protocol/openid-connect/userinfo"
+            - name: GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH
+              value: "realm_access.roles[?contains(@, 'admin')] && 'Admin' || 'Admin'"
+
             - name: PG_USER
               valueFrom:
                 secretKeyRef:

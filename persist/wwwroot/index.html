@@ -6,40 +6,46 @@
         <style>
             .border
             {
-                width: 380px;
+                width: 400px;
             }
             .header
             {
-                margin: 10px auto;
+                width: 100%;
                 font-family: Verdana, Geneva, Tahoma, sans-serif;
                 font-size: 40px;
                 font-weight: bolder;
                 vertical-align: sub;
+                justify-content: right;
+                align-items: flex-end;
+                display: flex;
             }
             .sign
             {
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                font-size: 50px;
+                font-size: 70px;
                 font-weight: bolder;
+                margin-bottom: -6px;
             }
             .version
             {
+                width: 100%;
                 font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 font-size: 10px;
                 font-weight: normal;
-                float: right;
+                justify-content: right;
+                display: flex;
             }
         </style>
     </head>
     <script>
-        fetch('http://localhost:5290/health/ready')
+        fetch('/health/ready')
             .then((response) => response.json())
             .then((data) => document.getElementById('version').textContent = data.serverVersion);
     </script>
     <body>
         <div class="border">
             <div class="header"><span class="sign">#</span>&nbsp;&nbsp;Watch-Server</div>
-            <div class="version" id="version"></div>
+            <div class="version" id="version" />
         </div>
     </body>
 </html>

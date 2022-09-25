@@ -26,6 +26,9 @@ variable "acme_server" {}
 variable "env_postgress_user" {}
 variable "env_postgress_password" {}
 
+variable "gf_keycloak_client_secret" {}
+variable "kd_keycloak_client_secret" {}
+
 variable "mssql_user" {}
 variable "mssql_password" {}
 
@@ -269,6 +272,7 @@ TELEGRAM_YAS_BOT_KEY=${var.telegram_yas_bot_key}
 TELEGRAM_CHAT_ID=${var.telegram_chat_id}
 APP_INSIGHTS_KEY=${var.app_insights_key}
 ADMIN_USERNAME=${var.admin_username}
+GF_KEYCLOAK_CLIENT_SECRET=${var.gf_keycloak_client_secret}
 VM_PRIVATE_IP=${azurerm_network_interface.nic[0].private_ip_address}
 EOF
     destination = "/home/${var.admin_username}/.env"
