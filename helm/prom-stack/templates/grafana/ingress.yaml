@@ -1,0 +1,15 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ .Values.grafana.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+  - websecure
+  routes:
+  - match: PathPrefix(`{{ .Values.grafana.dashboardPath }}/`)
+    kind: Rule
+    services:
+    - name: {{ .Values.grafana.name }}
+      port: {{ .Values.grafana.containerPort }}
+  tls: {}

@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  labels:
+    {{- include "kubernetes-dashboard.labels" . | nindent 4 }}
+  name: {{ include "kubernetes-dashboard.fullname" . }}-admin
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: Group
+  name: oidc:{{ .Values.global.kcGroupK8s }}
+  apiGroup: rbac.authorization.k8s.io

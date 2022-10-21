@@ -1,0 +1,48 @@
+# Default values for traefik.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+nameOverride: 'traefik'
+fullnameOverride: ""
+
+image:
+  repository: traefik
+  tag: ""
+
+isApiInsecure: true
+
+log:
+  enableLog: true
+  logPath: "/logs/debug.log"
+  logLevel: "DEBUG"
+  enableAccessLog: false
+  accessLogPath: "" # no path => console 
+
+enableForwardedHeaders: false
+
+ports:
+  internal:
+    name: 'internal'
+    hostPort: 8989
+  web:
+    name: 'web'
+    hostPort: 80
+  websecure:
+    name: 'websecure'
+    hostPort: 443
+
+resources:
+  requests:
+    memory: '60Mi'
+    cpu: '0.1'
+  # limits:
+  #   memory: ""
+  #   cpu: ""
+
+serviceAccount:
+  # If not set, a name is generated using the fullname template
+  name: ""
+  annotations: {}
+
+ingressClass:
+  isDefaultClass: true

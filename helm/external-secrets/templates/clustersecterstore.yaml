@@ -1,0 +1,24 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ClusterSecretStore
+metadata:
+  name: {{ .Values.global.clusterSecretStoreName }}
+#  namespace: {{ .Release.Namespace }}
+spec:
+  provider:
+    # provider type: azure keyvault
+    azurekv:
+      # azure tenant ID, see: https://docs.microsoft.com/en-us/azure/active-directory/fundamentals/active-directory-how-to-find-tenant
+      tenantId: {{ .Values.tenantId | quote }}
+      # URL of your vault instance, see: https://docs.microsoft.com/en-us/azure/key-vault/general/about-keys-secrets-certificates
+      vaultUrl: {{ include  "external-secrets.vaultUrl" . }}
+      authSecretRef:
+        # points to the secret that contains
+        # the azure service principal credentials
+        clientId:
+          name: {{ .Values.secretName }}
+          namespace: {{ .Release.Namespace }}
+          key: ClientID
+        clientSecret:
+          name: {{ .Values.secretName }}
+          namespace: {{ .Release.Namespace }}
+          key: ClientSecret

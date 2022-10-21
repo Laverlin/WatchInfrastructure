@@ -1,33 +1,164 @@
 
 - import_playbook: playbooks/00-init-vars.yaml
 - import_playbook: playbooks/01-mount-drive.yaml
+  when: secret_vars.deploy_env != 'dev'
+  
 - import_playbook: playbooks/02-preset-k8s.yaml
 - import_playbook: playbooks/03-node-primero.yaml
+
+- import_playbook: playbooks/04-1-remove-taint.yaml
+  when: secret_vars.deploy_env == 'dev'
+
 - import_playbook: playbooks/04-node-segundo.yaml
+  when: secret_vars.deploy_env != 'dev'
 
-- import_playbook: playbooks/05-create-namespaces.yaml
-- import_playbook: playbooks/06-create-azure-disk.yaml
-- import_playbook: playbooks/07-copy-configs.yaml
+- import_playbook: playbooks/05-generate-vars.yaml
 
-- import_playbook: playbooks/08-deploy-traefik.yaml
-- import_playbook: playbooks/09-deploy-monitoring.yaml
-- import_playbook: playbooks/10-deploy-side-services.yaml
-- import_playbook: playbooks/11-deploy-watch-backend.yaml
-- import_playbook: playbooks/12-cleanup.yaml
+## Deploy helm charts
+##
+- name: Deploy helm charts 
+  hosts: localhost
+  tasks:
+
+    - debug:
+        msg: "Current Environment: {{ secret_vars.deploy_env }}"
+
+    # - name: Add crd repo
+    #   kubernetes.core.helm_repository:
+    #     name: external-secrets
+    #     repo_url: "https://charts.external-secrets.io"
 
 
+    # - name: deploy external-secrets crd helm
+    #   kubernetes.core.helm:
+    #     kubeconfig: ~/remote-kube/{ ansible_host }/config
+    #     name: external-secrets
+    #     chart_ref: external-secrets/external-secrets
+    #     values:
+    #       installCRDs: true
+    #       webhook:
+    #         create: false
+    #       certController:
+    #         create: false
+    #     release_namespace: "external-secrets"
+    #     create_namespace: true
+    #     wait: true
 
 
+    # - name: deploy azure vault helm
+    #   kubernetes.core.helm:
+    #     kubeconfig: ~/remote-kube/{ ansible_host }/config
+    #     name: external-secrets
+    #     chart_ref: ../helm/external-secrets
+    #     values_files: 
+    #       - '../helm/generated-values.yaml'
+    #     values:
+    #       tenantId: "{{ secret_vars.azure_tenant_id }}"
+    #       clientId: "{{ secret_vars.azure_client_id }}"
+    #       clientSecret: "{{ secret_vars.azure_client_secret }}"
+    #     release_namespace: "vault"
+    #     create_namespace: true
 
-    ## Reboot to make sure everything is fine
-    ##
-# - name: Reboot all the kubernetes nodes.
-#   ansible.builtin.reboot:
-#     post_reboot_delay: 10
-#     reboot_timeout: 40
-#     connect_timeout: 60
-#     test_command: uptime
-# - pause: seconds=20
+    - name: deploy acme.sh helm
+      kubernetes.core.helm:
+        kubeconfig: ~/remote-kube/{ ansible_host }/config
+        name: acme-sh
+        chart_ref: ../helm/acme-sh
+        values_files: 
+          - '../helm/generated-values.yaml'
+        release_namespace: ingress
+        create_namespace: true
+        wait: true
+
+    - name: deploy traefik helm
+      kubernetes.core.helm:
+        kubeconfig: ~/remote-kube/{ ansible_host }/config
+        name: traefik
+        chart_ref: ../helm/traefik
+        values_files: 
+          - '../helm/generated-values.yaml'
+        release_namespace: ingress
+        create_namespace: true
+
+    - name: deploy postgres helm
+      kubernetes.core.helm:
+        kubeconfig: ~/remote-kube/{ ansible_host }/config
+        name: postgres
+        chart_ref: ../helm/postgres
+        values_files: 
+          - '../helm/generated-values.yaml'
+        release_namespace: database
+        create_namespace: true
+
+    - name: deploy keycloak helm
+      kubernetes.core.helm:
+        kubeconfig: ~/remote-kube/{ ansible_host }/config
+        name: keycloak
+        chart_ref: ../helm/keycloak
+        values_files: 
+          - '../helm/generated-values.yaml'
+        release_namespace: monitoring
+        create_namespace: true
+
+    - name: deploy kubernetes dashboard helm
+      kubernetes.core.helm:
+        kubeconfig: ~/remote-kube/{ ansible_host }/config
+        name: kubernetes-dashboard
+        chart_ref: ../helm/kubernetes-dashboard
+        values_files: 
+          - '../helm/generated-values.yaml'
+        release_namespace: monitoring
+        create_namespace: true
+
+
+    - name: deploy prom-stack helm
+      kubernetes.core.helm:
+        kubeconfig: ~/remote-kube/{ ansible_host }/config
+        name: prom-stack
+        chart_ref: ../helm/prom-stack
+        values_files: 
+          - '../helm/generated-values.yaml'
+        release_namespace: monitoring
+        create_namespace: true
+
+    # - name: Add prometheus-stack repo
+    #   kubernetes.core.helm_repository:
+    #     name: prometheus-community
+    #     repo_url: "https://prometheus-community.github.io/helm-charts"
+
+    # - name: deploy prometheus-stack helm
+    #   kubernetes.core.helm:
+    #     kubeconfig: ~/remote-kube/{ ansible_host }/config
+    #     name: prometheus-stack
+    #     chart_ref: prometheus-community/kube-prometheus-stack
+    #     values_files: 
+    #       - '../helm/prometheus-stack/values.yaml'
+    #       - '../helm/generated-values.yaml'
+    #     release_namespace: monitoring
+    #     create_namespace: true
+
+    # - name: deploy grafana-stack helm
+    #   kubernetes.core.helm:
+    #     kubeconfig: ~/remote-kube/{ ansible_host }/config
+    #     name: grafana-stack
+    #     chart_ref: ../helm/grafana-stack
+    #     values_files: 
+    #       - '../helm/generated-values.yaml'
+    #     release_namespace: monitoring
+    #     create_namespace: true
+
+
+# - import_playbook: playbooks/05-create-namespaces.yaml
+# - import_playbook: playbooks/06-create-azure-disk.yaml
+# - import_playbook: playbooks/07-copy-configs.yaml
+
+# - import_playbook: playbooks/08-deploy-traefik.yaml
+# - import_playbook: playbooks/09-deploy-monitoring.yaml
+# - import_playbook: playbooks/10-deploy-side-services.yaml
+# - import_playbook: playbooks/11-deploy-watch-backend.yaml
+# - import_playbook: playbooks/12-cleanup.yaml
+
+
 
 
  

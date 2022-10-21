@@ -1,0 +1,30 @@
+# Default values for kubernetes-dashboard.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+nameOverride: ""
+fullnameOverride: ""
+
+ports:
+  oauth:
+    number: 4180
+    name: oauth-port
+  dashboard:
+    number: 8443
+    name: dashboard-port
+  service:
+    number: 8443
+    name: service-port
+
+oauthPort: 4180
+dashboardPort: 8443
+
+dashboardPath: "/dashboard/kuber"
+
+serviceAccount:
+  annotations: {}
+  # The name of the service account to use.
+  # If not set a name is generated using the fullname template
+  name: ""

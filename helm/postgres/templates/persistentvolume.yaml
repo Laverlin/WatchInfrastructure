@@ -1,0 +1,23 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: "{{ include "postgres.fullname" . }}-pv"
+  labels:
+    {{- include "postgres.labels" . | nindent 4 }}
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "{{ .Values.global.storageRoot }}/persist/postgres"
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: node-role
+          operator: In
+          values:
+          - master

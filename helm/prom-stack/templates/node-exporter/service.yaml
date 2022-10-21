@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    prometheus.io/scrape: "true"
+  labels:
+    {{- include "nodeExporter.labels" . | nindent 4 }}
+  name: {{ .Values.nodeExporter.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+
+  ports:
+    - name: metrics
+      port: {{ .Values.nodeExporter.hostPort }}
+      protocol: TCP
+      targetPort: {{ .Values.nodeExporter.hostPort }}
+  selector:
+    {{- include "nodeExporter.selectorLabels" . | nindent 4 }}
+  type: ClusterIP

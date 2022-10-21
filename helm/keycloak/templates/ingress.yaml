@@ -1,0 +1,17 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "keycloak.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    kubernetes.io/ingress.class: traefik
+spec:
+  entryPoints:
+    - websecure
+  routes:
+  - match: Host(`{{ .Values.global.keycloakHostname }}`)
+    kind: Rule
+    services:
+    - name: {{ include "keycloak.fullname" . }}
+      port: {{ .Values.service.port }}
+  tls: {}

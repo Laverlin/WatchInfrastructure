@@ -1,0 +1,16 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "grafana-stack.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+  - websecure
+  routes:
+  - match: PathPrefix(`{{ .Values.dashboardPath }}/`)
+    kind: Rule
+    services:
+    - name: "prometheus-stack-grafana"
+      port: 80
+      #scheme: https
+  tls: {}

@@ -38,8 +38,3 @@
       ansible.builtin.file: 
         path: /home/{{ ansible_user }}/.kube/cache
         state: absent
-
-    - name: Remove master/control roles
-      become: false
-      ignore_errors: true
-      command: "kubectl taint nodes --all node-role.kubernetes.io/control-plane- node-role.kubernetes.io/master-"

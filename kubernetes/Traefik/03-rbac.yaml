@@ -60,7 +60,7 @@ metadata:
   name: traefik-account
 ---
 
-# Create link role & service account 
+# Create link role & service account
 #
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

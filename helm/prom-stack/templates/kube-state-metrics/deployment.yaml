@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    {{- include "kubeStateMetrics.labels" . | nindent 4 }}
+  name: {{ .Values.kubeStateMetrics.name }}
+  namespace: {{ .Values.kubeStateMetrics.namespace }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "kubeStateMetrics.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "kubeStateMetrics.labels" . | nindent 8 }}
+    spec:
+      automountServiceAccountToken: true
+      serviceAccountName: {{ include "kubeStateMetrics.serviceAccountName" . }}
+      containers:
+      - image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.5.0
+        ports:
+        - containerPort: {{ .Values.kubeStateMetrics.servicePort }}
+          name: "http"
+        - containerPort: {{ .Values.kubeStateMetrics.telemetryServicePort }}
+          name: "telemetry"
+          
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ .Values.kubeStateMetrics.servicePort }}
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        name: kube-state-metrics
+
+        readinessProbe:
+          httpGet:
+            path: /
+            port: {{ .Values.kubeStateMetrics.telemetryServicePort }}
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsUser: 65534

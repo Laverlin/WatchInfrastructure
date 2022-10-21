@@ -14,3 +14,4 @@ fi
 
 cd ../ansible
 ansible-playbook -i inventory-current.yaml setup-k8s.yaml
+cd ..

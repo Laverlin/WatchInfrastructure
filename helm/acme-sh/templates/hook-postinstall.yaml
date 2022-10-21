@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "acme-sh.fullname" . }}-job
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-install
+    "helm.sh/hook-weight": "0"
+    "helm.sh/hook-delete-policy": hook-succeeded
+  labels:
+    {{- include "acme-sh.labels" . | nindent 4 }}
+spec:
+  template:
+    metadata:
+      name: {{ include "acme-sh.fullname" . }}-job
+      labels:
+        {{- include "acme-sh.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "acme-sh.serviceAccountName" . }}
+      containers:
+        - name: kubectl
+          image: "bitnami/kubectl:latest"
+          imagePullPolicy: "IfNotPresent"
+          command:
+          - /bin/sh
+          - -c
+          - >
+            kubectl exec deploy/acme-sh -n {{ .Release.Namespace }} -- /bin/ash -c 'curl -o /kubectl -LO https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl';
+            kubectl exec deploy/acme-sh -n {{ .Release.Namespace }} -- /bin/ash -c 'chmod +x /kubectl && mv /kubectl /usr/local/bin/kubectl';
+            kubectl exec deploy/acme-sh -n {{ .Release.Namespace }} -- --set-notify --notify-hook telegram;
+            kubectl exec deploy/acme-sh -n {{ .Release.Namespace }} -- --issue -d {{ .Values.global.domainName }} -d *.{{ .Values.global.domainName }} \
+              --dns dns_namecom \
+              {{ if ne .Values.global.deployEnv "prod" -}}--staging \{{ else }}--server letsencrypt.org \{{- end }}
+              --key-file /acmeout/{{ .Values.global.domainName }}.key \
+              --fullchain-file /acmeout/{{ .Values.global.domainName }}.full \
+              --reloadcmd "/bin/ash -c 'kubectl create secret tls {{ .Values.global.tlsStoreName }} --namespace=default --key /acmeout/{{ .Values.global.domainName }}.key --cert /acmeout/{{ .Values.global.domainName }}.full --dry-run=client -o yaml | kubectl apply -f -'";
+      restartPolicy: Never
+  backoffLimit: 0

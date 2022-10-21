@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    {{- include "grafana.labels" . | nindent 4 }}
+  name: {{ .Values.grafana.name }}
+  namespace: {{ .Release.Namespace }}
+data:
+  allow-snippet-annotations: "false"
+  grafana.ini: |
+    [feature_toggles]
+    tempoSearch = true
+    tempoBackendSearch = true
