@@ -36,7 +36,7 @@ spec:
             runAsUser: 1001
           volumeMounts:
             - name: otel-config
-              mountPath: /etc/otel           
+              mountPath: /etc/otel
       volumes:
         - name: otel-config
           hostPath:

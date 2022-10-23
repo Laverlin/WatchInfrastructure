@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kafka.fullname" . }}
+  labels:
+    {{- include "kafka.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "kafka.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "kafka.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+
+        # kafka container
+        #
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          ports:
+            - containerPort: {{ .Values.ports.kafkaPort }}
+              name: kafka-internal
+            - containerPort: {{ .Values.ports.kafkaExternalPort }}
+              name: kafka-external
+            - containerPort: {{ .Values.ports.controllerPort }}
+              name: controller
+          env:
+            - name: KAFKA_HEAP_OPTS
+              value: "-Xmx380M -Xms256M"
+            - name: ALLOW_PLAINTEXT_LISTENER
+              value: "yes"
+            - name: CLUSTER_ID
+              value: "5Yr1SIgYQz-b-dgRabWx4g"
+            - name: NODE_ID
+              value: "1"
+            - name: CONTROLLER_QUORUM_VOTERS
+              value: "1@kafka:{{ .Values.ports.controllerPort }}"
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: "CONTROLLER:PLAINTEXT, INTERNAL:PLAINTEXT, EXTERNAL:PLAINTEXT"
+            - name: KAFKA_CONTROLLER_LISTENER_NAMES
+              value: "CONTROLLER"
+            - name: KAFKA_INTER_BROKER_LISTENER_NAME
+              value: "INTERNAL"
+            - name: LOG_DIR
+              value: "/kafka/data/logs"
+            - name: KAFKA_LISTENERS
+              value: "INTERNAL://:{{ .Values.ports.kafkaPort }}, CONTROLLER://:{{ .Values.ports.controllerPort }}, EXTERNAL://:{{ .Values.ports.kafkaExternalPort }}"
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: INTERNAL://{{ include "kafka.fullname" . }}.{{ .Release.Namespace }}:{{ .Values.ports.kafkaPort }}, EXTERNAL://{{ .Values.global.domainName }}:{{ .Values.ports.kafkaNodePort }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: kafka-data
+              mountPath: /kafka/data
+
+        # metric exporter container
+        #
+        - name: {{ .Chart.Name }}-exporter
+          image: "{{ .Values.image.exporterRepository }}:{{ .Values.image.exporterTag }}"
+          ports: 
+            - containerPort: {{ .Values.ports.exporterPort }}
+          args: 
+            - --kafka.server=localhost:{{ .Values.ports.kafkaPort }}
+          resources:
+            requests:
+              memory: "50Mi"
+
+      volumes:
+        - name: kafka-data
+          hostPath:
+            path: {{ .Values.global.storageRoot }}/persist/kafka
+            type: DirectoryOrCreate

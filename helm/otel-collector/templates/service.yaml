@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "otel-collector.fullname" . }}
+  labels:
+    {{- include "otel-collector.labels" . | nindent 4 }}
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: {{ .Values.ports.prometheusExporter | quote }}
+spec:
+  selector:
+    {{- include "otel-collector.selectorLabels" . | nindent 4 }}
+  ports:
+    - port: {{ .Values.ports.prometheusExporter }}
+      protocol: TCP
+      name: prometheus
+    - port: {{ .Values.ports.grpcReceiver }}
+      protocol: TCP
+      name: grpc
+    - port: {{ .Values.ports.zipkinReceiver }}
+      protocol: TCP
+      name: zipkin
+

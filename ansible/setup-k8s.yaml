@@ -90,6 +90,16 @@
         release_namespace: database
         create_namespace: true
 
+    - name: deploy kafka helm
+      kubernetes.core.helm:
+        kubeconfig: ~/remote-kube/{ ansible_host }/config
+        name: kafka
+        chart_ref: ../helm/kafka
+        values_files: 
+          - '../helm/generated-values.yaml'
+        release_namespace: database
+        create_namespace: true
+
     - name: deploy keycloak helm
       kubernetes.core.helm:
         kubeconfig: ~/remote-kube/{ ansible_host }/config
@@ -116,6 +126,36 @@
         kubeconfig: ~/remote-kube/{ ansible_host }/config
         name: prom-stack
         chart_ref: ../helm/prom-stack
+        values_files: 
+          - '../helm/generated-values.yaml'
+        release_namespace: monitoring
+        create_namespace: true
+
+    - name: deploy loki helm
+      kubernetes.core.helm:
+        kubeconfig: ~/remote-kube/{ ansible_host }/config
+        name: loki
+        chart_ref: ../helm/loki
+        values_files: 
+          - '../helm/generated-values.yaml'
+        release_namespace: monitoring
+        create_namespace: true
+
+    - name: deploy tempo helm
+      kubernetes.core.helm:
+        kubeconfig: ~/remote-kube/{ ansible_host }/config
+        name: tempo
+        chart_ref: ../helm/tempo
+        values_files: 
+          - '../helm/generated-values.yaml'
+        release_namespace: monitoring
+        create_namespace: true
+
+    - name: deploy otel-collector helm
+      kubernetes.core.helm:
+        kubeconfig: ~/remote-kube/{ ansible_host }/config
+        name: otel-collector
+        chart_ref: ../helm/otel-collector
         values_files: 
           - '../helm/generated-values.yaml'
         release_namespace: monitoring
