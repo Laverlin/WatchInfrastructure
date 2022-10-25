@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "vpn-server.fullname" . }}
+  labels:
+    {{- include "vpn-server.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "vpn-server.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "vpn-server.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: hwdsl2/ipsec-vpn-server
+          env:
+            - name: VPN_IPSEC_PSK
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vpn-server.fullname" . }}
+                  key: VPN_IPSEC_PSK
+            - name: VPN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vpn-server.fullname" . }}
+                  key: VPN_USER
+            - name: VPN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vpn-server.fullname" . }}
+                  key: VPN_PASSWORD
+          ports:
+            - containerPort: 500
+              protocol: UDP
+            - containerPort: 4500
+              protocol: UDP
+          securityContext:
+            privileged: true
+            allowPrivilegeEscalation: true
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+

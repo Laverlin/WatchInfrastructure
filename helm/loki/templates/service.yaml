@@ -5,8 +5,15 @@ metadata:
   labels:
     {{- include "loki.labels" . | nindent 4 }}
 spec:
+  {{- if eq .Values.global.deployEnv "dev" }}
+  type: NodePort
+  {{- end }}
   ports:
-    - port: {{ .Values.ports.containerPort }}
+    - port: {{ default .Values.ports.containerPort .Values.ports.servicePort }}
+      {{- if eq .Values.global.deployEnv "dev" }}
+      nodePort: {{ .Values.ports.nodePort }}
+      {{- end }}
+      targetPort: {{ .Values.ports.containerPort }}
       protocol: TCP
       name: http
   selector:

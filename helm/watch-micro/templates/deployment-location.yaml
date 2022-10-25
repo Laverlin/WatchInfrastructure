@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "watch-micro.fullname" (list . .Values.location.nameSuffix) }}
+  labels:
+    {{- include "watch-micro.labels" (list . .Values.location.nameSuffix) | nindent 4 }}
+spec:
+  replicas: {{ .Values.location.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "watch-micro.selectorLabels" (list . .Values.location.nameSuffix) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "watch-micro.selectorLabels" (list . .Values.location.nameSuffix) | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ include "watch-micro.fullname" (list . .Values.location.nameSuffix) }}
+          image: {{ .Values.location.imageRepo }}:{{ .Values.location.imageTag | default "latest" }}
+          env:
+            - name: Serilog__WriteTo__0__Args__uri
+              value: {{ .Values.lokiUrl }}
+            - name: ApiConfiguration__OpenTelemetryCollectorUrl
+              value: {{ .Values.otelCollectorUrl }}
+            - name: KafkaConfiguration__BootstrapServers
+              value: {{ .Values.kafkaServer }}
+            - name: AppConfiguration__handler 
+              value: LocationInfo
+            - name: VirtualEarthConfiguration__AuthKey
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "watch-micro.fullname" (list . "") }}
+                  key: wsLocationKey
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.location.resources | nindent 12 }}

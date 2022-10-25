@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "watch-micro.fullname" (list . .Values.api.nameSuffix) }}
+  labels:
+    {{- include "watch-micro.labels" (list . .Values.api.nameSuffix) | nindent 4 }}
+spec:
+  replicas: {{ .Values.api.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "watch-micro.selectorLabels" (list . .Values.api.nameSuffix) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "watch-micro.selectorLabels" (list . .Values.api.nameSuffix) | nindent 8 }}
+    spec:
+      containers:
+
+        - name: nginx
+          image: nginx:alpine
+          ports: 
+            - containerPort: {{ .Values.api.ports.nginx }}
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+            - name: nginx-log
+              mountPath: /var/log/nginx
+            - name: nginx-static
+              mountPath: /var/www/html
+          resources:
+            requests:
+              memory: "20Mi"
+
+        - name: {{ include "watch-micro.fullname" (list . .Values.api.nameSuffix) }}
+          image: {{ .Values.api.imageRepo }}:{{ .Values.api.imageTag | default "latest" }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.api.ports.api }}
+              protocol: TCP
+          env:
+            - name: Serilog__WriteTo__0__Args__uri
+              value: {{ .Values.lokiUrl }}
+            - name: ApiConfiguration__OpenTelemetryCollectorUrl
+              value: {{ .Values.otelCollectorUrl }}
+            - name: KafkaConfiguration__BootstrapServers
+              value: {{ .Values.kafkaServer }}
+            - name: PgProviderConfiguration__server
+              value: {{ .Values.pgServer }}
+            - name: PgProviderConfiguration__Port
+              value: {{ .Values.pgPort | quote }}
+            - name: ApiConfiguration__AuthSettings__Token
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "watch-micro.fullname" (list . "") }}
+                  key: authToken
+            - name: PgProviderConfiguration__UserId
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "watch-micro.fullname" (list . "") }}
+                  key: pgUser
+            - name: PgProviderConfiguration__Password
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "watch-micro.fullname" (list . "") }}
+                  key: pgPassword
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: {{ .Values.api.ports.api }}
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 10
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: {{ .Values.api.ports.api }}
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: {{ .Values.api.ports.api }}
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 15
+          resources:
+            {{- toYaml .Values.api.resources | nindent 12 }}
+
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: {{ include "watch-micro.fullname" (list . "nginx") }}
+        - name: nginx-log
+          hostPath:
+            path: {{ .Values.global.storageRoot }}/persist/nginx-micro/log
+            type: DirectoryOrCreate
+        - name: nginx-static
+          hostPath:
+            path: {{ .Values.global.storageRoot }}/persist/wwwroot
+            type: Directory
+

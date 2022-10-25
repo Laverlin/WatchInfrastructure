@@ -10,11 +10,17 @@ metadata:
 spec:
   selector:
     {{- include "otel-collector.selectorLabels" . | nindent 4 }}
+  {{- if eq .Values.global.deployEnv "dev" }}
+  type: NodePort
+  {{- end }}
   ports:
     - port: {{ .Values.ports.prometheusExporter }}
       protocol: TCP
       name: prometheus
     - port: {{ .Values.ports.grpcReceiver }}
+      {{- if eq .Values.global.deployEnv "dev" }}
+      nodePort: {{ .Values.ports.grpcReceiverNodePort }}
+      {{- end }}    
       protocol: TCP
       name: grpc
     - port: {{ .Values.ports.zipkinReceiver }}

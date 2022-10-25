@@ -15,6 +15,7 @@ ports:
   prometheusExporter: 8889
   zipkinReceiver: 9411
   grpcReceiver: 4317
+  grpcReceiverNodePort: 30431
 
 tempo:
   server: tempo.monitoring

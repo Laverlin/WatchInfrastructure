@@ -1,0 +1,66 @@
+nameOverride: ""
+fullnameOverride: ""
+
+lokiUrl: http://loki.monitoring:3100
+otelCollectorUrl: http://otel-collector.monitoring:4317
+pgServer: pg-server.database
+pgPort: 5432
+kafkaServer: kafka.database:9092
+
+api:
+  nameSuffix: api
+  replicaCount: 1
+  imageRepo: ilaverlin/watchcluster-api
+  imageTag: latest
+  ports:
+    api: 80 
+    nginx: 8080
+    service: 8080
+  resources:
+    requests:
+      memory: 200Mi
+
+location:
+  nameSuffix: location
+  replicaCount: 1
+  imageRepo: ilaverlin/watchcluster-servicehost
+  imageTag: "latest"
+  resources:
+    requests:
+      memory: 100Mi
+
+exchange:
+  nameSuffix: exchange
+  replicaCount: 1
+  imageRepo: ilaverlin/watchcluster-servicehost
+  imageTag: "latest"
+  resources:
+    requests:
+      memory: 100Mi
+
+weather:
+  nameSuffix: weather
+  replicaCount: 1
+  imageRepo: ilaverlin/watchcluster-servicehost
+  imageTag: "latest"
+  resources:
+    requests:
+      memory: 100Mi
+
+yasBot: 
+  nameSuffix: yasbot
+  replicaCount: 1
+  imageRepo: ilaverlin/watchcluster-yasbot
+  imageTag: "latest"
+  resources:
+    requests:
+      memory: 100Mi
+
+dbSink:
+  nameSuffix: dbsink
+  replicaCount: 1
+  imageRepo: ilaverlin/watchcluster-dbsink
+  imageTag: "latest"
+  resources:
+    requests:
+      memory: 50Mi

@@ -5,10 +5,17 @@ metadata:
   labels:
     {{- include "postgres.labels" . | nindent 4 }}
 spec:
-  type: {{ .Values.service.type }}
+  {{- if eq .Values.global.deployEnv "dev" }}
+  type: NodePort
+  {{- else -}}
+  type: ClusterIP
+  {{- end }}
   ports:
     - port: {{ .Values.service.port }}
       targetPort: 5432
       protocol: TCP
+      {{- if eq .Values.global.deployEnv "dev" }}
+      nodePort: {{ .Values.service.nodePort }}
+      {{- end }}
   selector:
     {{- include "postgres.selectorLabels" . | nindent 4 }}

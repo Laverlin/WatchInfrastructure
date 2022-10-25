@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "watch-micro.fullname" (list . .Values.dbSink.nameSuffix) }}
+  labels:
+    {{- include "watch-micro.labels" (list . .Values.dbSink.nameSuffix) | nindent 4 }}
+spec:
+  replicas: {{ .Values.dbSink.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "watch-micro.selectorLabels" (list . .Values.dbSink.nameSuffix) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "watch-micro.selectorLabels" (list . .Values.dbSink.nameSuffix) | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ include "watch-micro.fullname" (list . .Values.dbSink.nameSuffix) }}
+          image: {{ .Values.dbSink.imageRepo }}:{{ .Values.dbSink.imageTag | default "latest" }}
+          env:
+            - name: Serilog__WriteTo__0__Args__uri
+              value: {{ .Values.lokiUrl }}
+            - name: ApiConfiguration__OpenTelemetryCollectorUrl
+              value: {{ .Values.otelCollectorUrl }}
+            - name: KafkaConfiguration__BootstrapServers
+              value: {{ .Values.kafkaServer }}        
+            - name: PgProviderConfiguration__server
+              value: {{ .Values.pgServer }}
+            - name: PgProviderConfiguration__UserId
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "watch-micro.fullname" (list . "") }}
+                  key: pgUser
+            - name: PgProviderConfiguration__Password
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "watch-micro.fullname" (list . "") }}
+                  key: pgPassword
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.dbSink.resources | nindent 12 }}

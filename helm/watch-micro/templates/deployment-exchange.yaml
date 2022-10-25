@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "watch-micro.fullname" (list . .Values.exchange.nameSuffix) }}
+  labels:
+    {{- include "watch-micro.labels" (list . .Values.exchange.nameSuffix) | nindent 4 }}
+spec:
+  replicas: {{ .Values.exchange.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "watch-micro.selectorLabels" (list . .Values.exchange.nameSuffix) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "watch-micro.selectorLabels" (list . .Values.exchange.nameSuffix) | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ include "watch-micro.fullname" (list . .Values.exchange.nameSuffix) }}
+          image: {{ .Values.exchange.imageRepo }}:{{ .Values.exchange.imageTag | default "latest" }}
+          env:
+            - name: Serilog__WriteTo__0__Args__uri
+              value: {{ .Values.lokiUrl }}
+            - name: ApiConfiguration__OpenTelemetryCollectorUrl
+              value: {{ .Values.otelCollectorUrl }}
+            - name: KafkaConfiguration__BootstrapServers
+              value: {{ .Values.kafkaServer }}
+            - name: AppConfiguration__handler 
+              value: ExchangeRateInfo
+            - name: CurrencyExchangeConfiguration__CurrencyConverterKey
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "watch-micro.fullname" (list . "") }}
+                  key: wsCurrencyConverterKey
+            - name: CurrencyExchangeConfiguration__TwelveDataKey
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "watch-micro.fullname" (list . "") }}
+                  key: wsTwelveDataKey
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.exchange.resources | nindent 12 }}

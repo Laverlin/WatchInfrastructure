@@ -6,13 +6,15 @@
 - import_playbook: playbooks/02-preset-k8s.yaml
 - import_playbook: playbooks/03-node-primero.yaml
 
-- import_playbook: playbooks/04-1-remove-taint.yaml
+- import_playbook: playbooks/04-remove-taint.yaml
   when: secret_vars.deploy_env == 'dev'
 
-- import_playbook: playbooks/04-node-segundo.yaml
+- import_playbook: playbooks/05-node-segundo.yaml
   when: secret_vars.deploy_env != 'dev'
 
-- import_playbook: playbooks/05-generate-vars.yaml
+- import_playbook: playbooks/06-generate-vars.yaml
+
+- import_playbook: playbooks/07-copy-configs.yaml
 
 ## Deploy helm charts
 ##
@@ -23,183 +25,30 @@
     - debug:
         msg: "Current Environment: {{ secret_vars.deploy_env }}"
 
-    # - name: Add crd repo
-    #   kubernetes.core.helm_repository:
-    #     name: external-secrets
-    #     repo_url: "https://charts.external-secrets.io"
 
-
-    # - name: deploy external-secrets crd helm
-    #   kubernetes.core.helm:
-    #     kubeconfig: ~/remote-kube/{ ansible_host }/config
-    #     name: external-secrets
-    #     chart_ref: external-secrets/external-secrets
-    #     values:
-    #       installCRDs: true
-    #       webhook:
-    #         create: false
-    #       certController:
-    #         create: false
-    #     release_namespace: "external-secrets"
-    #     create_namespace: true
-    #     wait: true
-
-
-    # - name: deploy azure vault helm
-    #   kubernetes.core.helm:
-    #     kubeconfig: ~/remote-kube/{ ansible_host }/config
-    #     name: external-secrets
-    #     chart_ref: ../helm/external-secrets
-    #     values_files: 
-    #       - '../helm/generated-values.yaml'
-    #     values:
-    #       tenantId: "{{ secret_vars.azure_tenant_id }}"
-    #       clientId: "{{ secret_vars.azure_client_id }}"
-    #       clientSecret: "{{ secret_vars.azure_client_secret }}"
-    #     release_namespace: "vault"
-    #     create_namespace: true
-
-    - name: deploy acme.sh helm
+    - name: deploy helm charts
       kubernetes.core.helm:
         kubeconfig: ~/remote-kube/{ ansible_host }/config
-        name: acme-sh
-        chart_ref: ../helm/acme-sh
+        name: '{{ item.helmName }}'
+        chart_ref: '../helm/{{ item.helmName }}'
         values_files: 
           - '../helm/generated-values.yaml'
-        release_namespace: ingress
+        release_namespace: '{{ item.namespace }}'
         create_namespace: true
-        wait: true
+        wait: '{{ item.isWait }}'
 
-    - name: deploy traefik helm
-      kubernetes.core.helm:
-        kubeconfig: ~/remote-kube/{ ansible_host }/config
-        name: traefik
-        chart_ref: ../helm/traefik
-        values_files: 
-          - '../helm/generated-values.yaml'
-        release_namespace: ingress
-        create_namespace: true
-
-    - name: deploy postgres helm
-      kubernetes.core.helm:
-        kubeconfig: ~/remote-kube/{ ansible_host }/config
-        name: postgres
-        chart_ref: ../helm/postgres
-        values_files: 
-          - '../helm/generated-values.yaml'
-        release_namespace: database
-        create_namespace: true
-
-    - name: deploy kafka helm
-      kubernetes.core.helm:
-        kubeconfig: ~/remote-kube/{ ansible_host }/config
-        name: kafka
-        chart_ref: ../helm/kafka
-        values_files: 
-          - '../helm/generated-values.yaml'
-        release_namespace: database
-        create_namespace: true
-
-    - name: deploy keycloak helm
-      kubernetes.core.helm:
-        kubeconfig: ~/remote-kube/{ ansible_host }/config
-        name: keycloak
-        chart_ref: ../helm/keycloak
-        values_files: 
-          - '../helm/generated-values.yaml'
-        release_namespace: monitoring
-        create_namespace: true
-
-    - name: deploy kubernetes dashboard helm
-      kubernetes.core.helm:
-        kubeconfig: ~/remote-kube/{ ansible_host }/config
-        name: kubernetes-dashboard
-        chart_ref: ../helm/kubernetes-dashboard
-        values_files: 
-          - '../helm/generated-values.yaml'
-        release_namespace: monitoring
-        create_namespace: true
-
-
-    - name: deploy prom-stack helm
-      kubernetes.core.helm:
-        kubeconfig: ~/remote-kube/{ ansible_host }/config
-        name: prom-stack
-        chart_ref: ../helm/prom-stack
-        values_files: 
-          - '../helm/generated-values.yaml'
-        release_namespace: monitoring
-        create_namespace: true
-
-    - name: deploy loki helm
-      kubernetes.core.helm:
-        kubeconfig: ~/remote-kube/{ ansible_host }/config
-        name: loki
-        chart_ref: ../helm/loki
-        values_files: 
-          - '../helm/generated-values.yaml'
-        release_namespace: monitoring
-        create_namespace: true
-
-    - name: deploy tempo helm
-      kubernetes.core.helm:
-        kubeconfig: ~/remote-kube/{ ansible_host }/config
-        name: tempo
-        chart_ref: ../helm/tempo
-        values_files: 
-          - '../helm/generated-values.yaml'
-        release_namespace: monitoring
-        create_namespace: true
-
-    - name: deploy otel-collector helm
-      kubernetes.core.helm:
-        kubeconfig: ~/remote-kube/{ ansible_host }/config
-        name: otel-collector
-        chart_ref: ../helm/otel-collector
-        values_files: 
-          - '../helm/generated-values.yaml'
-        release_namespace: monitoring
-        create_namespace: true
-
-    # - name: Add prometheus-stack repo
-    #   kubernetes.core.helm_repository:
-    #     name: prometheus-community
-    #     repo_url: "https://prometheus-community.github.io/helm-charts"
-
-    # - name: deploy prometheus-stack helm
-    #   kubernetes.core.helm:
-    #     kubeconfig: ~/remote-kube/{ ansible_host }/config
-    #     name: prometheus-stack
-    #     chart_ref: prometheus-community/kube-prometheus-stack
-    #     values_files: 
-    #       - '../helm/prometheus-stack/values.yaml'
-    #       - '../helm/generated-values.yaml'
-    #     release_namespace: monitoring
-    #     create_namespace: true
-
-    # - name: deploy grafana-stack helm
-    #   kubernetes.core.helm:
-    #     kubeconfig: ~/remote-kube/{ ansible_host }/config
-    #     name: grafana-stack
-    #     chart_ref: ../helm/grafana-stack
-    #     values_files: 
-    #       - '../helm/generated-values.yaml'
-    #     release_namespace: monitoring
-    #     create_namespace: true
-
-
-# - import_playbook: playbooks/05-create-namespaces.yaml
-# - import_playbook: playbooks/06-create-azure-disk.yaml
-# - import_playbook: playbooks/07-copy-configs.yaml
-
-# - import_playbook: playbooks/08-deploy-traefik.yaml
-# - import_playbook: playbooks/09-deploy-monitoring.yaml
-# - import_playbook: playbooks/10-deploy-side-services.yaml
-# - import_playbook: playbooks/11-deploy-watch-backend.yaml
-# - import_playbook: playbooks/12-cleanup.yaml
-
-
-
-
- 
+      loop:
+        - { helmName: 'acme-sh', namespace: 'ingress', isWait: true }
+        - { helmName: 'traefik', namespace: 'ingress', isWait: false }
+        - { helmName: 'postgres', namespace: 'database', isWait: false }
+        - { helmName: 'kafka', namespace: 'database', isWait: false }
+        - { helmName: 'keycloak', namespace: 'monitoring', isWait: false }
+        - { helmName: 'kubernetes-dashboard', namespace: 'monitoring', isWait: false }
+        - { helmName: 'prom-stack', namespace: 'monitoring', isWait: false }
+        - { helmName: 'loki', namespace: 'monitoring', isWait: false }
+        - { helmName: 'tempo', namespace: 'monitoring', isWait: false }
+        - { helmName: 'otel-collector', namespace: 'monitoring', isWait: false }
+        - { helmName: 'watch-api-mono', namespace: 'watch-backend', isWait: false }
+        - { helmName: 'watch-micro', namespace: 'watch-backend', isWait: false }
+        - { helmName: 'vpn-server', namespace: 'tools', isWait: false }
 

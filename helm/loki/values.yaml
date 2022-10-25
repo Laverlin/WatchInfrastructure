@@ -14,6 +14,7 @@ ports:
   containerPort: 3100
   grpcContainerPort: 9096
   servicePort: 3100
+  nodePort: 30310
 
 securityContext: 
   # capabilities:

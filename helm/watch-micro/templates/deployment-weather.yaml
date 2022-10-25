@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "watch-micro.fullname" (list . .Values.weather.nameSuffix) }}
+  labels:
+    {{- include "watch-micro.labels" (list . .Values.weather.nameSuffix) | nindent 4 }}
+spec:
+  replicas: {{ .Values.weather.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "watch-micro.selectorLabels" (list . .Values.weather.nameSuffix) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "watch-micro.selectorLabels" (list . .Values.weather.nameSuffix) | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ include "watch-micro.fullname" (list . .Values.weather.nameSuffix) }}
+          image: {{ .Values.weather.imageRepo }}:{{ .Values.weather.imageTag | default "latest" }}
+          env:
+            - name: Serilog__WriteTo__0__Args__uri
+              value: {{ .Values.lokiUrl }}
+            - name: ApiConfiguration__OpenTelemetryCollectorUrl
+              value: {{ .Values.otelCollectorUrl }}
+            - name: KafkaConfiguration__BootstrapServers
+              value: {{ .Values.kafkaServer }}
+            - name: AppConfiguration__handler 
+              value: WeatherInfo
+            - name: WeatherConfiguration__OpenWeatherKey
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "watch-micro.fullname" (list . "") }}
+                  key: wsOpenWeatherKey
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.weather.resources | nindent 12 }}

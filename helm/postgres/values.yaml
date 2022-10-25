@@ -28,5 +28,7 @@ tolerations:
 affinity: {}
 
 service:
-  type: ClusterIP
   port: 5432
+  nodePort: 30543
+
+backupDatabase: "WatchService"
