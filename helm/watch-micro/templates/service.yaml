@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "watch-micro.fullname" (list . .Values.api.nameSuffix) }}
+  labels:
+    {{- include "watch-micro.labels" (list . .Values.api.nameSuffix) | nindent 4 }}
+spec:
+  selector:
+    {{- include "watch-micro.selectorLabels" (list . .Values.api.nameSuffix) | nindent 4 }}
+  ports:
+    - port: {{ .Values.api.ports.service }}
+      targetPort: {{ .Values.api.ports.nginx }}
+      protocol: TCP
+      name: http
+

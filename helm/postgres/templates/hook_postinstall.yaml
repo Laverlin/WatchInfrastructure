@@ -1,0 +1,79 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "postgres.fullname" . }}-restore
+  labels:
+    {{- include "postgres.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}-restore
+        image: ilaverlin/pg-az-backup:latest
+        env:
+        - name: POSTGRES_HOST
+          value: {{ include "postgres.fullname" . }}
+        - name: POSTGRES_DATABASE
+          value: {{ .Values.backupDatabase }}
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "postgres.fullname" . }}
+              key: PostgresUser
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "postgres.fullname" . }}
+              key: PostgresPassword
+        - name: AZURE_STORAGE_ACCOUNT
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "postgres.fullname" . }}
+              key: azStorageAccount
+        - name: AZURE_SAS
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "postgres.fullname" . }}
+              key: azSasToken
+        - name: AZURE_CONTAINER_NAME
+          valueFrom:
+            secretKeyRef:
+              name: {{ include "postgres.fullname" . }}
+              key: azContainerName
+        - name: RESTORE
+          value: "yes"
+        - name: DROP_PUBLIC
+          value: "create"
+
+      - name: {{ .Chart.Name }}-createdb
+        image: postgres:alpine
+        env:
+          - name: PGHOST
+            value: "{{ include "postgres.fullname" . }}"
+          - name: PGPORT
+            value: "{{ .Values.service.port }}"
+          - name: PGUSER
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "postgres.fullname" . }}
+                key: PostgresUser
+          - name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "postgres.fullname" . }}
+                key: PostgresPassword
+        command: 
+          - /bin/sh
+          - -c
+          - >
+            psql -tc "SELECT 1 FROM pg_database WHERE datname = 'grafana'" | grep -q 1 || psql -c "CREATE DATABASE grafana";
+            psql -tc "SELECT 1 FROM pg_database WHERE datname = 'keycloak'" | grep -q 1 || psql -c "CREATE DATABASE keycloak";
+
+      initContainers:
+      - name: wait-postrges
+        image: postgres:alpine
+        command: ['sh', '-c', "until pg_isready -h {{ include "postgres.fullname" . }} -p {{ .Values.service.port }}; do  echo waiting for {{ include "postgres.fullname" . }}; sleep 5; done"]
+      restartPolicy: Never
+  backoffLimit: 0

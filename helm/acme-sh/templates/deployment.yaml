@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "acme-sh.fullname" . }}
+  labels:
+    {{- include "acme-sh.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "acme-sh.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "acme-sh.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "acme-sh.serviceAccountName" . }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default ".Chart.AppVersion" }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          
+          args:
+            - daemon
+
+          env:
+            {{- $name := (include "acme-sh.secretName" .) -}}
+            {{- range $v := .Values.secrets.map }}
+            - name: {{ $v.containerKey }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $name }}
+                  key: {{ $v.secretKey }}
+            {{- end }}
+
+          resources:
+            limits:
+              memory: {{ .Values.resources.limits.memory }}
+              cpu: {{ .Values.resources.limits.cpu }}
+
+          volumeMounts:
+            - mountPath: "/acmeout"
+              name: acme-out
+            - mountPath: "/acme.sh"
+              name: acme-root
+
+      volumes:
+        - name: acme-out
+          hostPath:
+            path: {{ include "acme-sh.sslStorage" . }}
+            type: DirectoryOrCreate
+        - name: acme-root
+          hostPath:
+            path: {{ include "acme-sh.internalStorage" . }}
+            type: DirectoryOrCreate
+

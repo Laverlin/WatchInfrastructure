@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    {{- include "prometheus.labels" . | nindent 4 }}
+  name: {{ .Values.prometheus.name }}
+  namespace: {{ .Release.Namespace }}
+data:
+  allow-snippet-annotations: "false"
+{{- $root := . -}}
+
+{{- range $key, $value := .Values.prometheus.config.serverFiles }}
+  {{ $key }}: |
+{{- if eq $key "prometheus.yml" }}
+    global:
+{{ $root.Values.prometheus.config.global | toYaml | trimSuffix "\n" | indent 6 }}
+{{ end }}
+{{ toYaml $value | indent 4 }}
+{{- end }}

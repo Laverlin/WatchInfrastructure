@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    {{- include "prometheus.labels" . | nindent 4 }}
+  name: {{ .Values.prometheus.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "prometheus.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "prometheus.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "prometheus.serviceAccountName" . }}
+
+      containers:
+        - name: {{ .Values.prometheus.name }}
+          image: prom/prometheus:latest
+          ports:
+            - containerPort: {{ .Values.prometheus.containerPort }}
+          imagePullPolicy: 'IfNotPresent'
+          args:
+            - --config.file={{ .Values.prometheus.configPath }}
+            - --web.console.libraries=/etc/prometheus/console_libraries
+            - --web.console.templates=/etc/prometheus/consoles
+          volumeMounts:
+            - mountPath: /etc/config
+              name: prom-config
+            - mountPath: /prometheus
+              name: prom-data
+          resources:
+            requests:
+              memory: {{ .Values.prometheus.requests.memory }}
+              cpu: {{ .Values.prometheus.requests.cpu }}
+
+      securityContext:
+        runAsUser: 0
+        # runAsNonRoot: true
+        # runAsGroup: 65534
+        # fsGroup: 65534
+
+      volumes:
+        - name: prom-config
+          configMap:
+            name: {{ .Values.prometheus.name }}
+        - name: prom-data
+          hostPath:
+            path: {{ .Values.global.storageRoot }}/persist/prometheus
+            type: DirectoryOrCreate

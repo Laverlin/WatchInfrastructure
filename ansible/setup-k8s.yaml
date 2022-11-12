@@ -1,34 +1,54 @@
 
 - import_playbook: playbooks/00-init-vars.yaml
 - import_playbook: playbooks/01-mount-drive.yaml
+  when: secret_vars.deploy_env != 'dev'
+  
 - import_playbook: playbooks/02-preset-k8s.yaml
 - import_playbook: playbooks/03-node-primero.yaml
-- import_playbook: playbooks/04-node-segundo.yaml
 
-- import_playbook: playbooks/05-create-namespaces.yaml
-- import_playbook: playbooks/06-create-azure-disk.yaml
+- import_playbook: playbooks/04-remove-taint.yaml
+  when: secret_vars.deploy_env == 'dev'
+
+- import_playbook: playbooks/05-node-segundo.yaml
+  when: secret_vars.deploy_env != 'dev'
+
+- import_playbook: playbooks/06-generate-vars.yaml
+
 - import_playbook: playbooks/07-copy-configs.yaml
 
-- import_playbook: playbooks/08-deploy-traefik.yaml
-- import_playbook: playbooks/09-deploy-monitoring.yaml
-- import_playbook: playbooks/10-deploy-side-services.yaml
-- import_playbook: playbooks/11-deploy-watch-backend.yaml
-- import_playbook: playbooks/12-cleanup.yaml
+## Deploy helm charts
+##
+- name: Deploy helm charts 
+  hosts: localhost
+  tasks:
+
+    - debug:
+        msg: "Current Environment: {{ secret_vars.deploy_env }}"
 
 
+    - name: deploy helm charts
+      kubernetes.core.helm:
+        kubeconfig: '~/remote-kube/{{ ansible_host }}/config'
+        name: '{{ item.helmName }}'
+        chart_ref: '../helm/{{ item.helmName }}'
+        values_files: 
+          - '../helm/generated-values.yaml'
+        release_namespace: '{{ item.namespace }}'
+        create_namespace: true
+        wait: '{{ item.isWait }}'
 
-
-
-    ## Reboot to make sure everything is fine
-    ##
-# - name: Reboot all the kubernetes nodes.
-#   ansible.builtin.reboot:
-#     post_reboot_delay: 10
-#     reboot_timeout: 40
-#     connect_timeout: 60
-#     test_command: uptime
-# - pause: seconds=20
-
-
- 
+      loop:
+        - { helmName: 'acme-sh', namespace: 'ingress', isWait: true }
+        - { helmName: 'traefik', namespace: 'ingress', isWait: false }
+        - { helmName: 'postgres', namespace: 'database', isWait: false }
+        - { helmName: 'kafka', namespace: 'database', isWait: false }
+        - { helmName: 'keycloak', namespace: 'monitoring', isWait: false }
+        - { helmName: 'kubernetes-dashboard', namespace: 'monitoring', isWait: false }
+        - { helmName: 'prom-stack', namespace: 'monitoring', isWait: false }
+        - { helmName: 'loki', namespace: 'monitoring', isWait: false }
+        - { helmName: 'tempo', namespace: 'monitoring', isWait: false }
+        - { helmName: 'otel-collector', namespace: 'monitoring', isWait: false }
+        - { helmName: 'watch-api-mono', namespace: 'watch-backend', isWait: false }
+        - { helmName: 'watch-micro', namespace: 'watch-backend', isWait: false }
+        - { helmName: 'vpn-server', namespace: 'tools', isWait: false }
 

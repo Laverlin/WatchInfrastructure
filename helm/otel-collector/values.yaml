@@ -1,0 +1,38 @@
+# Default values for otel-collector.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: otel/opentelemetry-collector
+  tag: "latest"
+
+nameOverride: ""
+fullnameOverride: ""
+
+ports:
+  prometheusExporter: 8889
+  zipkinReceiver: 9411
+  grpcReceiver: 4317
+  grpcReceiverNodePort: 30431
+
+tempo:
+  server: tempo.monitoring
+  port: 55680
+
+securityContext:
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  runAsUser: 1001
+
+resources: 
+  limits:
+  #   cpu: 100m
+    memory: 150Mi
+  requests:
+    cpu: 100m
+    memory: 50Mi

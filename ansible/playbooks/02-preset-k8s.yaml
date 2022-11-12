@@ -68,34 +68,18 @@
           - containerd
         state: present
 
-    # - name: Add Docker's official GPG key
-    #   ansible.builtin.apt_key:
-    #     url: https://download.docker.com/linux/ubuntu/gpg
-    #     state: present
-
-    # - name: Add Docker Repository
-    #   ansible.builtin.apt_repository:
-    #     repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu xenial stable
-    #     state: present
-    #     filename: docker
-    #     update_cache: yes
-
-    # - name: Install containerd
-    #   ansible.builtin.apt: 
-    #     name:
-    #       - containerd.io
-    #     state: present
-
     - name: Create containerd config folder
       ansible.builtin.file:
         path: /etc/containerd
         state: directory
 
     - name: Configure containerd
-      shell: "{{ item }}"
-      with_items:
-        - "/usr/bin/containerd config default > /etc/containerd/config.toml"
-        - "sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml"
+      shell: "/usr/bin/containerd config default > /etc/containerd/config.toml"
+      args:
+        creates: /etc/containerd/config.toml
+
+    - name: Configure containerd - fix CGroup
+      shell: "sed -i 's/SystemdCgroup = false/SystemdCgroup = true/g' /etc/containerd/config.toml"
 
     - name: Enable containerd service, and start it
       ansible.builtin.systemd: 
@@ -131,27 +115,27 @@
         name: kubelet
         enabled: yes
 
-    ## Setup azure config file
-    ##
-    - name: Create cloud-config folder
-      ansible.builtin.file:
-        path: /etc/kubernetes/cloud-config
-        state: directory
+    # ## Setup azure config file
+    # ##
+    # - name: Create cloud-config folder
+    #   ansible.builtin.file:
+    #     path: /etc/kubernetes/cloud-config
+    #     state: directory
 
-    - name: Create file
-      copy:
-        dest: /etc/kubernetes/cloud-config/azure.json 
-        force: yes
-        content: |
-          {
-            "cloud": "AzurePublicCloud",
-            "tenantId": "{{secret_vars.azure_tenant_id}}",
-            "subscriptionId": "{{secret_vars.azure_subscription_id}}",
-            "aadClientId": "{{secret_vars.azure_client_id}}",
-            "aadClientSecret": "{{secret_vars.azure_client_secret}}",
-            "resourceGroup": "{{secret_vars.azure_resourcegroup}}",
-            "location": "{{secret_vars.location}}",
-            "subnetName": "{{secret_vars.azure_subnet}}",
-            "securityGroupName": "{{secret_vars.azure_nsg}}",
-            "vnetName": "{{secret_vars.azure_vnet}}",
-          }
+    # - name: Create file
+    #   copy:
+    #     dest: /etc/kubernetes/cloud-config/azure.json 
+    #     force: yes
+    #     content: |
+    #       {
+    #         "cloud": "AzurePublicCloud",
+    #         "tenantId": "{{secret_vars.azure_tenant_id}}",
+    #         "subscriptionId": "{{secret_vars.azure_subscription_id}}",
+    #         "aadClientId": "{{secret_vars.azure_client_id}}",
+    #         "aadClientSecret": "{{secret_vars.azure_client_secret}}",
+    #         "resourceGroup": "{{secret_vars.azure_resourcegroup}}",
+    #         "location": "{{secret_vars.location}}",
+    #         "subnetName": "{{secret_vars.azure_subnet}}",
+    #         "securityGroupName": "{{secret_vars.azure_nsg}}",
+    #         "vnetName": "{{secret_vars.azure_vnet}}",
+    #       }

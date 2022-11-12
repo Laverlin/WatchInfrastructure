@@ -1,0 +1,65 @@
+# Midnight backup
+#
+{{- if eq .Values.global.deployEnv "prod" }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "postgres.fullname" . }}-backup
+  labels:
+    {{- include "postgres.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: "0 0 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: {{ .Chart.Name }}-backup
+              image: ilaverlin/pg-az-backup
+              env:
+                - name: POSTGRES_HOST
+                  value: {{ include "postgres.fullname" . }}
+                - name: POSTGRES_DATABASE
+                  value: {{ .Values.backupDatabase }}
+                - name: POSTGRES_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "postgres.fullname" . }}
+                      key: PostgresUser
+                - name: POSTGRES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "postgres.fullname" . }}
+                      key: PostgresPassword
+                - name: AZURE_STORAGE_ACCOUNT
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "postgres.fullname" . }}
+                      key: azStorageAccount
+                - name: AZURE_SAS
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "postgres.fullname" . }}
+                      key: azSasToken
+                - name: AZURE_CONTAINER_NAME
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "postgres.fullname" . }}
+                      key: azContainerName
+              volumeMounts:
+                - mountPath: "/etc/data"
+                  name: home-data
+          volumes:
+            - name: home-data
+              hostPath:
+                path: {{ .Values.global.storageRoot }}/pg-backup
+                type: DirectoryOrCreate
+          initContainers:
+            - name: wait-postrges
+              image: postgres:alpine
+              command: ['sh', '-c', "until pg_isready -h {{ include "postgres.fullname" . }} -p {{ .Values.service.port }}; do  echo waiting for {{ include "postgres.fullname" . }}; sleep 5; done"]
+{{- end }}

@@ -1,0 +1,9 @@
+- name: Remove taint
+  hosts: barolo
+  become: false
+
+  tasks:    
+    - name: Remove master/control roles
+      ignore_errors: true
+      command: kubectl taint nodes --all node-role.kubernetes.io/control-plane- 
+      #node-role.kubernetes.io/master-

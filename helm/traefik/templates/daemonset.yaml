@@ -1,0 +1,118 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ include "traefik.fullname" . }}
+  labels:
+    {{- include "traefik.labels" . | nindent 4 }}
+
+spec:
+  selector:
+    matchLabels:
+      {{- include "traefik.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "traefik.labels" . | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+    spec:
+      serviceAccountName: {{ include "traefik.serviceAccountName" . }}
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}"
+          args:
+            {{- if .Values.isApiInsecure }}
+            - --api.insecure
+            {{- end }}
+
+            {{- if .Values.log.enableAccessLog }}
+            - --accesslog
+            - --accesslog.filepath={{ .Values.log.accessLogPath }}
+            {{- end }}
+
+            {{- if .Values.log.enableLog }}
+            - --log.filePath={{ .Values.log.logPath }}
+            - --log.level={{ .Values.log.logLevel }}
+            {{- end }}
+
+            - --entrypoints.web.Address=:{{ .Values.ports.web.hostPort }}
+            - --entrypoints.websecure.Address=:{{ .Values.ports.websecure.hostPort }}
+            - --entrypoints.web.http.redirections.entryPoint.to=websecure
+            - --entrypoints.web.http.redirections.entryPoint.scheme=https
+            - --entrypoints.web.http.redirections.entrypoint.permanent=true
+
+            - --providers.kubernetescrd=true
+            - --providers.kubernetesingress=true
+
+            # - --providers.kubernetescrd.ingressClass={{ template "traefik.fullname" . }}
+
+            - --providers.kubernetescrd.allowCrossNamespace=true
+            - --providers.kubernetescrd.allowExternalNameServices=true
+            - --providers.kubernetescrd.allowEmptyServices=true
+
+            - --serverstransport.insecureskipverify=true
+
+            {{- if .Values.enableForwardedHeaders}}
+            - --entryPoints.websecure.proxyProtocol.insecure
+            - --entryPoints.websecure.forwardedHeaders.insecure
+            {{- end}}
+
+            - --ping=true
+            - --metrics.prometheus=true
+            - --metrics.prometheus.addEntryPointsLabels=true
+            - --metrics.prometheus.addServicesLabels=true
+            - --metrics.prometheus.addRoutersLabels=true
+            
+          ports:
+            - name: {{ .Values.ports.web.name }}
+              containerPort: 80
+              hostPort: {{ .Values.ports.web.hostPort }}
+            - name: {{ .Values.ports.websecure.name }}
+              containerPort: 443
+              hostPort: {{ .Values.ports.websecure.hostPort }}
+            - name: {{ .Values.ports.internal.name }}
+              containerPort: 8080
+              hostPort: {{ .Values.ports.internal.hostPort }}
+          volumeMounts:
+            - mountPath: /logs
+              name: tr-logs
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /ping
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          readinessProbe:
+            failureThreshold: 1
+            httpGet:
+              path: /ping
+              port: 8080
+              scheme: HTTP
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 2
+          securityContext:
+            allowPrivilegeEscalation: true
+            capabilities:
+              drop:
+              - ALL
+              add:
+              - NET_BIND_SERVICE
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+      volumes:
+        - name: tr-logs
+          hostPath:
+            path: {{ .Values.global.storageRoot }}/logs/traefik
+            type: DirectoryOrCreate

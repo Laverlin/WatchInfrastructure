@@ -1,0 +1,33 @@
+# Default values for postgres.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+image:
+  repository: postgres
+  tag: "alpine"
+
+nameOverride: ""
+fullnameOverride: "pg-server"
+
+pgSecret: "postgres"
+
+resources: {}
+#   requests:
+#     cpu: ".2"
+#     memory: "100Mi"
+
+nodeSelector: 
+  node-role: master
+
+tolerations: 
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Exists"
+    effect: "NoSchedule"
+
+affinity: {}
+
+service:
+  port: 5432
+  nodePort: 30543
+
+backupDatabase: "WatchService"

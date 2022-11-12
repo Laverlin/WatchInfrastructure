@@ -1,0 +1,136 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kubernetes-dashboard.fullname" . }}
+  labels:
+    {{- include "kubernetes-dashboard.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "kubernetes-dashboard.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "kubernetes-dashboard.selectorLabels" . | nindent 8 }}
+    spec:
+      {{ if eq .Values.global.deployEnv "dev" -}}
+      hostAliases:
+        - ip: "{{ .Values.global.publicIp }}"
+          hostnames:
+            - "{{ .Values.global.domainName }}"
+            - "{{ .Values.global.keycloakHostname }}"
+      {{- end }}
+      serviceAccountName: {{ include "kubernetes-dashboard.serviceAccountName" . }}
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+
+        # OAuth container
+        #
+        - name: oauth2-proxy
+          image: quay.io/oauth2-proxy/oauth2-proxy:latest
+          env:
+          - name: OAUTH2_PROXY_PROVIDER
+            value: oidc
+          - name: OAUTH2_PROXY_EMAIL_DOMAINS
+            value: "*"
+          - name: OAUTH2_PROXY_HTTP_ADDRESS
+            value: "0.0.0.0:{{ .Values.ports.oauth.number }}"
+          - name: OAUTH2_PROXY_REVERSE_PROXY
+            value: "true"
+          - name: OAUTH2_PROXY_OIDC_ISSUER_URL
+            value: "{{ .Values.global.oidcIssuerUrl }}"
+          - name: OAUTH2_PROXY_REDIRECT_URL
+            value: "https://{{ .Values.global.domainName }}{{ .Values.dashboardPath }}/oauth2/callback"
+          - name: OAUTH2_PROXY_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "kubernetes-dashboard.fullname" . }}
+                key: clientId 
+          - name: OAUTH2_PROXY_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "kubernetes-dashboard.fullname" . }}
+                key: clientSecret 
+          - name: OAUTH2_PROXY_COOKIE_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "kubernetes-dashboard.fullname" . }}
+                key: cookieSecret 
+          - name: OAUTH2_PROXY_UPSTREAMS
+            value: https://localhost:{{ .Values.ports.dashboard.number }}/ # , http://localhost:80/whoami/
+          - name: OAUTH2_PROXY_SSL_INSECURE_SKIP_VERIFY
+            value: "true"
+          - name: OAUTH2_PROXY_COOKIE_DOMAINS
+            value: ".{{ .Values.global.domainName }},{{ .Values.global.domainName }},xps-gold"
+          - name: OAUTH2_PROXY_INSECURE_OIDC_ALLOW_UNVERIFIED_EMAIL
+            value: "true"
+          - name: OAUTH2_PROXY_COOKIE_SECURE
+            value: "false"
+          - name: OAUTH2_PROXY_COOKIE_REFRESH
+            value: "4m"
+          - name: OAUTH2_PROXY_PASS_AUTHORIZATION_HEADER
+            value: "true"
+          - name: OAUTH2_PROXY_SSL_UPSTREAM_INSECURE_SKIP_VERIFY
+            value: "true"
+          - name: OAUTH2_PROXY_OIDC_EMAIL_CLAIM
+            value: email
+          - name: OAUTH2_PROXY_GROUPS_CLAIM
+            value: groups
+          - name: OAUTH2_PROXY_ALLOWED_GROUPS
+            value: {{ .Values.global.kcGroupK8s | quote }}
+          - name: OAUTH2_PROXY_SKIP_PROVIDER_BUTTON
+            value: "true"
+          - name: OAUTH2_PROXY_SET_AUTHORIZATION_HEADER
+            value: "false"
+          - name: OAUTH2_PROXY_WHITELIST_DOMAINS
+            value: ".{{ .Values.global.domainName }},{{ .Values.global.domainName }},xps-gold"
+          ports:
+          - containerPort: {{ .Values.ports.oauth.number }}
+
+        # Kubernetes-dashboard container
+        #
+        - name: {{ .Chart.Name }}
+          image: kubernetesui/dashboard:latest #v2.6.0
+          ports:
+            - containerPort: {{ .Values.ports.dashboard.number }}
+              protocol: TCP
+          args:
+            - --auto-generate-certificates
+            - --namespace={{ .Release.Namespace }}
+            - --token-ttl=0
+            # Uncomment the following line to manually specify Kubernetes API server Host
+            # If not specified, Dashboard will attempt to auto discover the API server and connect
+            # to it. Uncomment only if the default does not work.
+            # - --apiserver-host=http://my-address:port
+          volumeMounts:
+            - name: kubernetes-dashboard-certs
+              mountPath: /certs
+              # Create on-disk volume to store exec logs
+            - mountPath: /tmp
+              name: tmp-volume
+          livenessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /
+              port: {{ .Values.ports.dashboard.number }}
+            initialDelaySeconds: 30
+            timeoutSeconds: 30
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsUser: 1001
+            runAsGroup: 2001
+
+      volumes:
+        - name: kubernetes-dashboard-certs
+          secret:
+            secretName: kubernetes-dashboard-certs
+        - name: tmp-volume
+          emptyDir: {}

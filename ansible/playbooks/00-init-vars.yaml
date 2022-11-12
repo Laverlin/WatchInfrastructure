@@ -1,7 +1,7 @@
 ## Import secret vars
 ##
 - name: Set secret vars
-  hosts: all
+  hosts: all:localhost
   gather_facts: true
   tasks:
 
@@ -16,4 +16,42 @@
         _arr: "{{ item.split(' = ') }}"
         _key: "{{ _arr.0 | trim  }}"
         _val: "{{ _arr.1 | trim | regex_replace('[\"]', '') }}"
-      no_log: true
+      #no_log: true
+
+    - name: define DEV variables
+      set_fact:
+        envs:
+          domain_name: "{{ secret_vars.dev_namecom_fqn }}"
+          postgres_user: "{{ secret_vars.dev_postgress_user }}"
+          postgres_password: "{{ secret_vars.dev_postgress_password }}"
+          telegram_bot_api_token: "{{ secret_vars.dev_telegram_bot_api_token }}"
+          kc_clientsecret_k8s: "{{ secret_vars.dev_kc_clientsecret_k8s }}"
+          kc_clientsecret_gf: "{{ secret_vars.dev_kc_clientsecret_gf }}"
+      when: secret_vars.deploy_env == 'dev'
+
+    - name: define STAGE variables
+      set_fact: 
+        envs:
+          domain_name: "{{ secret_vars.stage_namecom_fqn }}"
+          postgres_user: "{{ secret_vars.stage_postgress_user }}"
+          postgres_password: "{{ secret_vars.stage_postgress_password }}"
+          telegram_bot_api_token: "{{ secret_vars.stage_telegram_bot_api_token }}"
+          kc_clientsecret_k8s: "{{ secret_vars.stage_kc_clientsecret_k8s }}"
+          kc_clientsecret_gf: "{{ secret_vars.stage_kc_clientsecret_gf }}"
+      when: secret_vars.deploy_env == 'stage'
+
+    - name: define PROD variables
+      set_fact:
+        envs:
+          domain_name: "{{ secret_vars.prod_namecom_fqn }}"
+          postgres_user: "{{ secret_vars.prod_postgress_user }}"
+          postgres_password: "{{ secret_vars.prod_postgress_password }}"
+          telegram_bot_api_token: "{{ secret_vars.prod_telegram_bot_api_token }}"
+          kc_clientsecret_k8s: "{{ secret_vars.prod_kc_clientsecret_k8s }}"
+          kc_clientsecret_gf: "{{ secret_vars.prod_kc_clientsecret_gf }}"
+      when: secret_vars.deploy_env == 'prod'
+
+    - name: define common vars
+      set_fact:
+        common:
+          oidc_issuer_url: "https://{{ secret_vars.keycloak_subdomain }}{{ envs.domain_name }}{{ secret_vars.keycloak_realm_path }}"

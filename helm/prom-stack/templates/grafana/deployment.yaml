@@ -1,0 +1,123 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    {{- include "grafana.labels" . | nindent 4 }}
+  name: {{ .Values.grafana.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "grafana.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "grafana.labels" . | nindent 8 }}
+    spec:
+      {{ if eq .Values.global.deployEnv "dev" -}}
+      hostAliases:
+        - ip: "{{ .Values.global.publicIp }}"
+          hostnames:
+            - "{{ .Values.global.domainName }}"
+            - "{{ .Values.global.keycloakHostname }}"
+      {{- end }}
+      containers:
+        - name: {{ .Values.grafana.name }}
+          image: grafana/grafana:latest
+          ports:
+            - containerPort: {{ .Values.grafana.containerPort }}
+          env:
+            - name: GF_PATHS_CONFIG
+              value: "/etc/grafana/grafana.ini"
+            - name: GF_PATHS_PROVISIONING
+              value: "/etc/grafana/"
+            - name: GF_DATABASE_TYPE
+              value: "postgres"
+            - name: GF_DATABASE_HOST
+              value: "{{ .Values.grafana.database.url }}:{{ .Values.grafana.database.port }}"
+            - name: GF_DATABASE_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.grafana.name }}
+                  key: PostgresUser
+            - name: GF_DATABASE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.grafana.name }}
+                  key: PostgresPassword
+            - name: GF_INSTALL_PLUGINS
+              value: "grafana-worldmap-panel"
+            - name: GF_AUTH_DISABLE_LOGIN_FORM
+              value: "true"
+            - name: GF_AUTH_OAUTH_AUTO_LOGIN
+              value: "true"
+            - name: GF_SERVER_DOMAIN
+              value: "{{ .Values.global.domainName }}"
+            - name: GF_SERVER_ROOT_URL
+              value: "https://{{ .Values.global.domainName }}{{ .Values.grafana.dashboardPath }}/"
+            - name: GF_SERVER_SERVE_FROM_SUB_PATH
+              value: "true"
+            - name: GF_AUTH_GENERIC_OAUTH_ENABLED
+              value: "true"
+            {{ if ne .Values.global.deployEnv "prod" -}}
+            - name: GF_AUTH_GENERIC_OAUTH_TLS_SKIP_VERIFY_INSECURE
+              value: "true"
+            {{- end }}
+            - name: GF_AUTH_GENERIC_OAUTH_NAME
+              value: "Keycloak"
+            - name: GF_AUTH_GENERIC_OAUTH_ALLOW_SIGN_UP
+              value: "true"
+            - name: GF_AUTH_GENERIC_OAUTH_CLIENT_ID
+              value: "{{ .Values.global.kcClientIdGf }}"
+            - name: GF_AUTH_GENERIC_OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.grafana.name }}
+                  key: kcClientSecret
+            - name: GF_AUTH_GENERIC_OAUTH_SCOPES
+              value: "profile email openid"
+            - name: GF_AUTH_GENERIC_OAUTH_AUTH_URL
+              value: "{{ .Values.global.oidcIssuerUrl }}/protocol/openid-connect/auth"
+            - name: GF_AUTH_GENERIC_OAUTH_TOKEN_URL
+              value: "{{ .Values.global.oidcIssuerUrl }}/protocol/openid-connect/token"
+            - name: GF_AUTH_GENERIC_OAUTH_API_URL
+              value: "{{ .Values.global.oidcIssuerUrl }}/protocol/openid-connect/userinfo"
+            - name: GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH
+              value: "groups[?(@ == 'grafana-admin')] && 'Admin' || 'View'"
+
+            - name: GF_SECURITY_SECRET_KEY
+              value: "some-secret-key"
+
+            - name: PG_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.grafana.name }}
+                  key: PostgresUser
+            - name: PG_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.grafana.name }}
+                  key: PostgresPassword
+          volumeMounts:
+            - name: config
+              mountPath: /etc/grafana
+            - name: datasources
+              mountPath: /etc/grafana/datasources
+
+          resources:
+            requests:
+               memory: "200Mi"
+
+      initContainers:
+        - name: wait-postrges
+          image: postgres:alpine
+          command: ['sh', '-c', "until pg_isready -h {{ .Values.grafana.database.url }} -p {{ .Values.grafana.database.port }}; do  echo waiting for {{ .Values.grafana.database.url }}; sleep 5; done"]
+
+      volumes:
+        - name: config
+          configMap:
+            name: "{{ .Values.grafana.name }}-grafana.ini"
+        - name: datasources
+          configMap:
+            name: "{{ .Values.grafana.name }}-datasources.yaml"
+

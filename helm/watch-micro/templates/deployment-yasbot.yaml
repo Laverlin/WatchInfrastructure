@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "watch-micro.fullname" (list . .Values.yasBot.nameSuffix) }}
+  labels:
+    {{- include "watch-micro.labels" (list . .Values.yasBot.nameSuffix) | nindent 4 }}
+spec:
+  replicas: {{ .Values.yasBot.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "watch-micro.selectorLabels" (list . .Values.yasBot.nameSuffix) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "watch-micro.selectorLabels" (list . .Values.yasBot.nameSuffix) | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ include "watch-micro.fullname" (list . .Values.yasBot.nameSuffix) }}
+          image: {{ .Values.yasBot.imageRepo }}:{{ .Values.yasBot.imageTag | default "latest" }}
+          env:
+            - name: Serilog__WriteTo__0__Args__uri
+              value: {{ .Values.lokiUrl }}
+            - name: BotConfiguration__OpenTelemetryCollectorUrl
+              value: {{ .Values.otelCollectorUrl }}
+            - name: BotConfiguration__BaseStorageApiUrl
+              value: http://{{ include "watch-micro.fullname" (list . .Values.api.nameSuffix) }}:{{ .Values.api.ports.service }}/api/v2.0/YASail/
+            - name: BotConfiguration__BotApiKey
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "watch-micro.fullname" (list . "") }}
+                  key: telegramBotApiToken
+          startupProbe:
+            httpGet:
+              path: /health/ready
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            failureThreshold: 10
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: 80
+              scheme: HTTP
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.yasBot.resources | nindent 12 }}

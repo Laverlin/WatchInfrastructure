@@ -2,6 +2,8 @@
 # VARIABLES
 #############################################################################
 
+variable "deploy_env" {}
+
 variable "azure_subscription_id" {}
 variable "azure_tenant_id" {}
 variable "azure_client_id" {}
@@ -17,20 +19,22 @@ variable "azure_storage_key" {}
 
 variable "namecom_user" {}
 variable "namecom_token" {}
-variable "namecom_fqn" {}
-variable "namecom_host" {}
 variable "namecom_domain" {}
-variable "namecom_entry_id" {}
-variable "acme_server" {}
 
-variable "env_postgress_user" {}
-variable "env_postgress_password" {}
+variable "prod_namecom_fqn" {}
+variable "prod_namecom_host" {}
+variable "prod_namecom_entry_id" {}
 
-variable "gf_keycloak_client_secret" {}
-variable "kd_keycloak_client_secret" {}
+variable "stage_namecom_fqn" {}
+variable "stage_namecom_host" {}
+variable "stage_namecom_entry_id" {}
 
-variable "mssql_user" {}
-variable "mssql_password" {}
+locals {
+  namecom_fqn = var.deploy_env == "prod" ? var.prod_namecom_fqn : var.stage_namecom_fqn
+  namecom_host = var.deploy_env == "prod" ? var.prod_namecom_host : var.stage_namecom_host
+  namecom_entry_id = var.deploy_env == "prod" ? var.prod_namecom_entry_id : var.stage_namecom_entry_id
+  shared_disk_name = "nb-${var.deploy_env}-disk"
+}
 
 variable "vpn_pre_shared_key" {}
 variable "vpn_username" {}
@@ -42,7 +46,7 @@ variable "ws_open_weather_key" {}
 variable "ws_currency_converter_key" {}
 variable "ws_twelve_data_key" {}
 variable "ws_auth_token" {}
-variable "telegram_yas_bot_key" {}
+
 variable "telegram_chat_id" {}
 variable "app_insights_key" {}
 
@@ -51,14 +55,13 @@ variable azure_resourcegroup {}
 variable azure_vnet {}
 variable azure_subnet {}
 variable azure_nsg {}
-variable azure_disk {}
-variable azure_storage_data {}
+
 
 variable "location" {}
 
 variable "node_count" {
   type = number
-  default = 2
+  default = 3
 }
 
 # variable "vm_size" {
@@ -211,18 +214,19 @@ resource "azurerm_availability_set" "avset" {
 module "vm-module" {
   source           = "./vm-module"
   for_each = {
-    "barolo" = {size = "Standard_B2s", nic-id = azurerm_network_interface.nic[0].id}
-    "vouvrey" = {size = "Standard_B2s", nic-id = azurerm_network_interface.nic[1].id} 
+    "barolo"      = {size = "Standard_B1ms", nic-id = azurerm_network_interface.nic[0].id}
+    "barbaresco"  = {size = "Standard_B2s", nic-id = azurerm_network_interface.nic[1].id}
+    "sfursat"     = {size = "Standard_B2s", nic-id = azurerm_network_interface.nic[2].id}
   }
-  vm_name          = "${each.key}"
-  rg_name          = azurerm_resource_group.rg.name
-  location         = var.location
-  nic_id           = each.value.nic-id
-  admin_public_key_path        = var.admin_public_key_path
-  admin_username    = var.admin_username
-  vm_size           = each.value.size
-  #shared_disk_id    = azurerm_managed_disk.shared-data-disk.id
-  av_id             = azurerm_availability_set.avset.id
+  vm_name                 = "${each.key}"
+  rg_name                 = azurerm_resource_group.rg.name
+  location                = var.location
+  nic_id                  = each.value.nic-id
+  admin_public_key_path   = var.admin_public_key_path
+  admin_username          = var.admin_username
+  vm_size                 = each.value.size
+  shared_disk_id          = azurerm_managed_disk.shared-data-disk.id
+  av_id                   = azurerm_availability_set.avset.id
 }
 
 
@@ -236,46 +240,14 @@ resource "null_resource" "vm-script-deploy" {
     host        = azurerm_public_ip.public_ip.ip_address
     user        = var.admin_username
     private_key = file(var.admin_private_key_path)
-    port        = 50221
+    port        = 50022
 
   }
 
   provisioner "remote-exec" {
     inline = [
-      "curl -u '${var.namecom_user}:${var.namecom_token}' 'https://api.name.com/v4/domains/${var.namecom_domain}/records/${var.namecom_entry_id}' -X PUT -H 'Content-Type: application/json' --data '{\"host\":\"${var.namecom_host}\",\"type\":\"A\",\"answer\":\"${azurerm_public_ip.public_ip.ip_address}\",\"ttl\":300}'"
+      "curl -u '${var.namecom_user}:${var.namecom_token}' 'https://api.name.com/v4/domains/${var.namecom_domain}/records/${local.namecom_entry_id}' -X PUT -H 'Content-Type: application/json' --data '{\"host\":\"${local.namecom_host}\",\"type\":\"A\",\"answer\":\"${azurerm_public_ip.public_ip.ip_address}\",\"ttl\":300}'"
     ]
-  }
-
-  provisioner "file" {
-    content = <<EOF
-VPN_IPSEC_PSK="${var.vpn_pre_shared_key}"
-VPN_USER="${var.vpn_username}"
-VPN_PASSWORD="${var.vpn_password}"
-NAMECOM_USER=${var.namecom_user}
-NAMECOM_TOKEN=${var.namecom_token}
-DOMAIN_NAME=${var.namecom_fqn}
-PG_USER=${var.env_postgress_user}
-PG_PASS=${var.env_postgress_password}
-MSSQL_USER=${var.mssql_user}
-MSSQL_PASSWORD=${var.mssql_password}
-AZ_STORAGE_ACCOUNT=${var.azure_storage_account}
-AZ_SAS_TOKEN=${var.azure_sas_token}
-AZ_CONTAINER_NAME=${var.azure_container_name}
-AZ_STORAGE_KEY=${var.azure_storage_key}
-WS_LOCATION_KEY=${var.ws_location_key}
-WS_DARK_SKY_KEY=${var.ws_dark_sky_key}
-WS_OPEN_WEATHER_KEY=${var.ws_open_weather_key}
-WS_CURRENCY_CONVERTER_KEY=${var.ws_currency_converter_key}
-WS_TWELVE_DATA_KEY=${var.ws_twelve_data_key}
-WS_AUTH_TOKEN=${var.ws_auth_token}
-TELEGRAM_YAS_BOT_KEY=${var.telegram_yas_bot_key}
-TELEGRAM_CHAT_ID=${var.telegram_chat_id}
-APP_INSIGHTS_KEY=${var.app_insights_key}
-ADMIN_USERNAME=${var.admin_username}
-GF_KEYCLOAK_CLIENT_SECRET=${var.gf_keycloak_client_secret}
-VM_PRIVATE_IP=${azurerm_network_interface.nic[0].private_ip_address}
-EOF
-    destination = "/home/${var.admin_username}/.env"
   }
   
 }
@@ -284,12 +256,14 @@ resource "local_file" "inventory" {
     content = <<EOF
 all:
   hosts:
-    master:
-      ansible_port: 50221
-    worker:
+    barolo:
+      ansible_port: 50022
+    barbaresco:
+      ansible_port: 50122
+    sfursat:
       ansible_port: 50222
   vars:
-    ansible_host: ${var.namecom_fqn}
+    ansible_host: ${local.namecom_fqn}
     ansible_user: ${var.admin_username}
     ansible_ssh_private_key_file: ${var.admin_private_key_path}
     ansible_ssh_common_args: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
@@ -307,7 +281,7 @@ output "resource_group"{
 }
 
 output "domain_name" {
-  value = var.namecom_fqn 
+  value = local.namecom_fqn 
 }
 
 output "public_ip" {

@@ -1,0 +1,30 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: mono-redirect
+  namespace: {{ .Release.Namespace }}
+spec:
+ replacePathRegex:
+    regex: ^/mono/(.*)
+    replacement: /$1
+---
+
+## Route Rule
+##
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "watch-api-mono.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: PathPrefix(`/mono/`)
+      kind: Rule
+      middlewares:
+        - name: mono-redirect
+      services:
+        - name: {{ include "watch-api-mono.fullname" . }}
+          port: {{ .Values.ports.service }}
+  tls: {}

@@ -1,0 +1,33 @@
+
+image:
+  repository: debezium/kafka
+  tag: latest
+  exporterRepository: bitnami/kafka-exporter
+  exporterTag: latest
+
+nameOverride: ""
+fullnameOverride: ""
+
+ports:
+  kafkaPort: 9092
+  kafkaExternalPort: 9094
+  kafkaNodePort: 30994
+  controllerPort: 9093
+  exporterPort: 9308
+
+securityContext:
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  runAsUser: 0
+
+resources:
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  requests:
+  #   cpu: 100m
+    memory: 500Mi
+
