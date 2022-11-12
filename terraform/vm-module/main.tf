@@ -19,8 +19,8 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
     source_image_reference {
         publisher = "Canonical"
-        offer     = "0001-com-ubuntu-server-focal" # "0001-com-ubuntu-server-jammy"
-        sku       = "20_04-lts-gen2" # "22_04-lts-gen2" 
+        offer     = "0001-com-ubuntu-server-jammy" # "0001-com-ubuntu-server-focal" # 
+        sku       = "22_04-lts-gen2" # "20_04-lts-gen2" # 
         version   = "latest"
     }
 
@@ -35,9 +35,10 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
 }
 
-# resource "azurerm_virtual_machine_data_disk_attachment" "data-disk-attachment-m" {
-#   managed_disk_id    = var.shared_disk_id
-#   virtual_machine_id = azurerm_linux_virtual_machine.vm.id
-#   lun                = "10"
-#   caching            = "None"
-# }
+resource "azurerm_virtual_machine_data_disk_attachment" "data-disk-attachment" {
+  managed_disk_id    = var.shared_disk_id
+  virtual_machine_id = azurerm_linux_virtual_machine.vm.id
+  lun                = "10"
+  caching            = "None"
+  count              = azurerm_linux_virtual_machine.vm.name == "barolo" ? 1: 0
+}

@@ -3,7 +3,7 @@ kind: ConfigMap
 metadata:
   labels:
     {{- include "grafana.labels" . | nindent 4 }}
-  name: {{ .Values.grafana.name }}
+  name: "{{ .Values.grafana.name }}-grafana.ini"
   namespace: {{ .Release.Namespace }}
 data:
   allow-snippet-annotations: "false"

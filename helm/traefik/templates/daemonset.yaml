@@ -109,9 +109,7 @@ spec:
               add:
               - NET_BIND_SERVICE
           resources:
-            requests:
-              memory: {{ .Values.resources.requests.memory }}
-              cpu: {{ .Values.resources.requests.cpu }}
+            {{- toYaml .Values.resources | nindent 12 }}
 
       volumes:
         - name: tr-logs

@@ -28,7 +28,7 @@
 
     - name: deploy helm charts
       kubernetes.core.helm:
-        kubeconfig: ~/remote-kube/{ ansible_host }/config
+        kubeconfig: '~/remote-kube/{{ ansible_host }}/config'
         name: '{{ item.helmName }}'
         chart_ref: '../helm/{{ item.helmName }}'
         values_files: 

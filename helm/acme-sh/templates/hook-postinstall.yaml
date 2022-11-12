@@ -29,10 +29,11 @@ spec:
             kubectl exec deploy/acme-sh -n {{ .Release.Namespace }} -- /bin/ash -c 'chmod +x /kubectl && mv /kubectl /usr/local/bin/kubectl';
             kubectl exec deploy/acme-sh -n {{ .Release.Namespace }} -- --set-notify --notify-hook telegram;
             kubectl exec deploy/acme-sh -n {{ .Release.Namespace }} -- --issue -d {{ .Values.global.domainName }} -d *.{{ .Values.global.domainName }} \
+              --force \
               --dns dns_namecom \
               {{ if ne .Values.global.deployEnv "prod" -}}--staging \{{ else }}--server letsencrypt.org \{{- end }}
               --key-file /acmeout/{{ .Values.global.domainName }}.key \
               --fullchain-file /acmeout/{{ .Values.global.domainName }}.full \
-              --reloadcmd "/bin/ash -c 'kubectl create secret tls {{ .Values.global.tlsStoreName }} --namespace=default --key /acmeout/{{ .Values.global.domainName }}.key --cert /acmeout/{{ .Values.global.domainName }}.full --dry-run=client -o yaml | kubectl apply -f -'";
+              --reloadcmd "/bin/ash -c 'kubectl create secret tls {{ .Values.global.tlsStoreName }} --namespace=default --key /acmeout/{{ .Values.global.domainName }}.key --cert /acmeout/{{ .Values.global.domainName }}.full --dry-run=client -o yaml | kubectl apply -f -'" || true;
       restartPolicy: Never
   backoffLimit: 0

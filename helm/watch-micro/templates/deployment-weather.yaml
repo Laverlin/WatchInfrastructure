@@ -20,7 +20,7 @@ spec:
           env:
             - name: Serilog__WriteTo__0__Args__uri
               value: {{ .Values.lokiUrl }}
-            - name: ApiConfiguration__OpenTelemetryCollectorUrl
+            - name: AppConfiguration__OpenTelemetryCollectorUrl
               value: {{ .Values.otelCollectorUrl }}
             - name: KafkaConfiguration__BootstrapServers
               value: {{ .Values.kafkaServer }}

@@ -1,7 +1,7 @@
 ## Setup worker node 
 ##
-- name: Setup worker node
-  hosts: worker
+- name: Setup worker nodes
+  hosts: all,!barolo,!K8S_JOIN_HOLDER
   become: true
   become_method: sudo
   become_user: root
@@ -17,22 +17,22 @@
     - debug:
         msg: "{{ joined_or_not.stdout }}"
 
-    - name: Create directory for kube config.
-      ansible.builtin.file: 
-        path: /home/{{ ansible_user }}/.kube
-        state: directory
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-        mode: 0755
+    # - name: Create directory for kube config.
+    #   ansible.builtin.file: 
+    #     path: /home/{{ ansible_user }}/.kube
+    #     state: directory
+    #     owner: "{{ ansible_user }}"
+    #     group: "{{ ansible_user }}"
+    #     mode: 0755
 
-    - name: Copy /etc/kubernetes/admin.conf to user home directory /home/{{ ansible_user }}/.kube/config
-      ansible.builtin.copy:
-        src: /etc/kubernetes/admin.conf
-        dest: /home/{{ ansible_user }}/.kube/config
-        remote_src: yes
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-        mode: 0644
+    # - name: Copy /etc/kubernetes/admin.conf to user home directory /home/{{ ansible_user }}/.kube/config
+    #   ansible.builtin.copy:
+    #     src: /etc/kubernetes/admin.conf
+    #     dest: /home/{{ ansible_user }}/.kube/config
+    #     remote_src: yes
+    #     owner: "{{ ansible_user }}"
+    #     group: "{{ ansible_user }}"
+    #     mode: 0644
 
     - name: Remove the cache directory.
       ansible.builtin.file: 

@@ -29,6 +29,8 @@ spec:
           env:
             - name: GF_PATHS_CONFIG
               value: "/etc/grafana/grafana.ini"
+            - name: GF_PATHS_PROVISIONING
+              value: "/etc/grafana/"
             - name: GF_DATABASE_TYPE
               value: "postgres"
             - name: GF_DATABASE_HOST
@@ -57,7 +59,7 @@ spec:
               value: "true"
             - name: GF_AUTH_GENERIC_OAUTH_ENABLED
               value: "true"
-            {{ if eq .Values.global.deployEnv "dev" -}}
+            {{ if ne .Values.global.deployEnv "prod" -}}
             - name: GF_AUTH_GENERIC_OAUTH_TLS_SKIP_VERIFY_INSECURE
               value: "true"
             {{- end }}
@@ -73,7 +75,7 @@ spec:
                   name: {{ .Values.grafana.name }}
                   key: kcClientSecret
             - name: GF_AUTH_GENERIC_OAUTH_SCOPES
-              value: "profile"
+              value: "profile email openid"
             - name: GF_AUTH_GENERIC_OAUTH_AUTH_URL
               value: "{{ .Values.global.oidcIssuerUrl }}/protocol/openid-connect/auth"
             - name: GF_AUTH_GENERIC_OAUTH_TOKEN_URL
@@ -81,7 +83,10 @@ spec:
             - name: GF_AUTH_GENERIC_OAUTH_API_URL
               value: "{{ .Values.global.oidcIssuerUrl }}/protocol/openid-connect/userinfo"
             - name: GF_AUTH_GENERIC_OAUTH_ROLE_ATTRIBUTE_PATH
-              value: "realm_access.roles[?contains(@, 'admin')] && 'Admin' || 'Admin'"
+              value: "groups[?(@ == 'grafana-admin')] && 'Admin' || 'View'"
+
+            - name: GF_SECURITY_SECRET_KEY
+              value: "some-secret-key"
 
             - name: PG_USER
               valueFrom:
@@ -94,8 +99,10 @@ spec:
                   name: {{ .Values.grafana.name }}
                   key: PostgresPassword
           volumeMounts:
-            - name: grafana-config
+            - name: config
               mountPath: /etc/grafana
+            - name: datasources
+              mountPath: /etc/grafana/datasources
 
           resources:
             requests:
@@ -107,6 +114,10 @@ spec:
           command: ['sh', '-c', "until pg_isready -h {{ .Values.grafana.database.url }} -p {{ .Values.grafana.database.port }}; do  echo waiting for {{ .Values.grafana.database.url }}; sleep 5; done"]
 
       volumes:
-        - name: grafana-config
+        - name: config
           configMap:
-            name: {{ .Values.grafana.name }}
+            name: "{{ .Values.grafana.name }}-grafana.ini"
+        - name: datasources
+          configMap:
+            name: "{{ .Values.grafana.name }}-datasources.yaml"
+

@@ -11,18 +11,17 @@ fullnameOverride: "pg-server"
 
 pgSecret: "postgres"
 
-resources: 
-  requests:
-    cpu: ".2"
-    memory: "100Mi"
+resources: {}
+#   requests:
+#     cpu: ".2"
+#     memory: "100Mi"
 
 nodeSelector: 
   node-role: master
 
 tolerations: 
   - key: "node-role.kubernetes.io/control-plane"
-    operator: "Equal"
-    value: "true"
+    operator: "Exists"
     effect: "NoSchedule"
 
 affinity: {}

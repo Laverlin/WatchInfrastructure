@@ -1,7 +1,7 @@
 ## Setup master node 
 ##
 - name: Setup primero master node
-  hosts: master
+  hosts: barolo, master
   become: true
   become_method: sudo
   become_user: root
@@ -10,16 +10,25 @@
 
     ## Init Cluster
     ##
-    - name: Create Cluster Certificate
-      shell: "kubeadm certs certificate-key > /home/{{ ansible_user }}/kubernetes/cert_key"
-      args:
-        creates: /home/{{ ansible_user }}/kubernetes/cert_key 
-    
-    - name: extract certificate key
-      command: "cat /home/{{ ansible_user }}/kubernetes/cert_key"
-      register:  certificate_key_output
+    - name: Create directory for kube config.
+      ansible.builtin.file: 
+        path: /home/{{ ansible_user }}/.kube
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: 0755
 
-    - name: Create DEV init config file
+    - name: Create Cluster Certificate
+      shell: "kubeadm certs certificate-key"  #  > /home/{{ ansible_user }}/kubernetes/cert_key"
+      register:  certificate_key_output
+      # args:
+      #   creates: /home/{{ ansible_user }}/kubernetes/cert_key 
+    
+    # - name: extract certificate key
+    #   command: "cat /home/{{ ansible_user }}/kubernetes/cert_key"
+    #   register:  certificate_key_output
+
+    - name: Create DEV/STAGE init config file
       copy:
         dest: /home/{{ ansible_user }}/.kube/init_config.yaml
         content: |
@@ -46,16 +55,16 @@
               oidc-ca-file: {{ secret_vars.storage_root }}/persist/ssl/{{ envs.domain_name }}.full
             extraVolumes:
               - name: "ssl-cert"
-                hostPath: "{{ secret_vars.storage_root }}/persist/ssl/{{ envs.domain_name }}.full"
-                mountPath: "{{ secret_vars.storage_root }}/persist/ssl/{{ envs.domain_name }}.full"
+                hostPath: "{{ secret_vars.storage_root }}/persist/ssl/"
+                mountPath: "{{ secret_vars.storage_root }}/persist/ssl/"
                 readOnly: true
-                pathType: File
+                pathType: DirectoryOrCreate
             certSANs:
               - "{{ public_ip }}"
               - "{{ envs.domain_name }}"
-      when: secret_vars.deploy_env == 'dev'
+      when: secret_vars.deploy_env != 'prod'
 
-    - name: Create PROD/STAGE init config file
+    - name: Create PROD init config file
       copy:
         dest: /home/{{ ansible_user }}/.kube/init_config.yaml
         content: |
@@ -82,13 +91,14 @@
             certSANs:
               - "{{ public_ip }}"
               - "{{ envs.domain_name }}"
-      when: secret_vars.deploy_env != 'dev'
+      when: secret_vars.deploy_env == 'prod'
 
     - name: Intilizing Kubernetes Cluster
       command: |
         kubeadm init \
         --config=/home/{{ ansible_user }}/.kube/init_config.yaml \
-        --upload-certs
+        --upload-certs \
+        --ignore-preflight-errors=NumCPU
       args:
         creates: /etc/kubernetes/manifests/kube-apiserver.yaml
 
@@ -103,14 +113,6 @@
     #     --upload-certs
     #   args:
     #     creates: /etc/kubernetes/manifests/kube-apiserver.yaml
-
-    - name: Create directory for kube config.
-      ansible.builtin.file: 
-        path: /home/{{ ansible_user }}/.kube
-        state: directory
-        owner: "{{ ansible_user }}"
-        group: "{{ ansible_user }}"
-        mode: 0755
 
     - name: Copy /etc/kubernetes/admin.conf to user home directory /home/{{ ansible_user }}/.kube/config
       ansible.builtin.copy:
@@ -129,12 +131,16 @@
     - name: Copy kube config to localhost
       ansible.builtin.fetch:
         src: /home/{{ ansible_user }}/.kube/config
-        dest: ~/remote-kube/{ ansible_host }/
+        dest: ~/remote-kube/{{ ansible_host }}/
         flat: yes
+
+    - name: get host name
+      shell: "hostname"
+      register: host_name 
 
     - name: Set master node label
       become: false
-      shell: "kubectl label nodes {{ node_name }} node-role=master"
+      shell: "kubectl label nodes {{ host_name.stdout }} node-role=master"
 
     ## install kube network
     ##

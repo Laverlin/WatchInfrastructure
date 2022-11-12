@@ -24,9 +24,7 @@ spec:
         - --kubelet-preferred-address-types=Hostname,InternalIP,ExternalIP
         - --kubelet-use-node-status-port
         - --metric-resolution=15s
-        {{ if eq .Values.global.deployEnv "dev" -}}
         - --kubelet-insecure-tls
-        {{- end }}
         image: k8s.gcr.io/metrics-server/metrics-server:v0.6.1
         imagePullPolicy: IfNotPresent
         livenessProbe:

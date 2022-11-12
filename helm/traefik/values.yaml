@@ -31,10 +31,10 @@ ports:
     name: 'websecure'
     hostPort: 443
 
-resources:
-  requests:
-    memory: '60Mi'
-    cpu: '0.1'
+resources: {}
+  # requests:
+  #   memory: '60Mi'
+  #   cpu: '0.1'
   # limits:
   #   memory: ""
   #   cpu: ""

@@ -46,6 +46,31 @@ spec:
           value: "yes"
         - name: DROP_PUBLIC
           value: "create"
+
+      - name: {{ .Chart.Name }}-createdb
+        image: postgres:alpine
+        env:
+          - name: PGHOST
+            value: "{{ include "postgres.fullname" . }}"
+          - name: PGPORT
+            value: "{{ .Values.service.port }}"
+          - name: PGUSER
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "postgres.fullname" . }}
+                key: PostgresUser
+          - name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "postgres.fullname" . }}
+                key: PostgresPassword
+        command: 
+          - /bin/sh
+          - -c
+          - >
+            psql -tc "SELECT 1 FROM pg_database WHERE datname = 'grafana'" | grep -q 1 || psql -c "CREATE DATABASE grafana";
+            psql -tc "SELECT 1 FROM pg_database WHERE datname = 'keycloak'" | grep -q 1 || psql -c "CREATE DATABASE keycloak";
+
       initContainers:
       - name: wait-postrges
         image: postgres:alpine

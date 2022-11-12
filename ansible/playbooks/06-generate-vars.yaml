@@ -22,10 +22,10 @@
             pgPass: {{ envs.postgres_password }}
             oauthCookieSecret: {{ secret_vars.oauth_cookiesecret }}
             kcClientIdK8s: {{ secret_vars.kc_clientid_k8s }}
-            kcClientSecretK8s: {{ secret_vars.kc_clientsecret_k8s }}
+            kcClientSecretK8s: {{ envs.kc_clientsecret_k8s }}
             kcGroupK8s: {{ secret_vars.kc_group_k8s }}
             kcClientIdGf: {{ secret_vars.kc_clientid_gf }}
-            kcClientSecretGf: {{ secret_vars.kc_clientsecret_gf }}
+            kcClientSecretGf: {{ envs.kc_clientsecret_gf }}
             
             NamecomUser: {{ secret_vars.namecom_user }}
             NamecomToken: {{ secret_vars.namecom_token }}

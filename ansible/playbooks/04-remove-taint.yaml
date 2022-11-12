@@ -1,5 +1,5 @@
 - name: Remove taint
-  hosts: master
+  hosts: barolo
   become: false
 
   tasks:    
