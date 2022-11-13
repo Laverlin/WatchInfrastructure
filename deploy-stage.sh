@@ -1,5 +1,8 @@
 #!/bin/bash
 
+sed -i -e '/deploy_env/s/dev/stage/g' terraform/secret.auto.tfvars
+sed -i -e '/deploy_env/s/prod/stage/g' terraform/secret.auto.tfvars
+
 . terraform/secret.auto.tfvars
 
 echo "Deploy k8s cluster on azure"

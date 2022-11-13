@@ -32,7 +32,7 @@
         name: '{{ item.helmName }}'
         chart_ref: '../helm/{{ item.helmName }}'
         values_files: 
-          - '../helm/generated-values.yaml'
+          - '../helm/secret.{{ secret_vars.deploy_env }}-values.yaml'
         release_namespace: '{{ item.namespace }}'
         create_namespace: true
         wait: '{{ item.isWait }}'

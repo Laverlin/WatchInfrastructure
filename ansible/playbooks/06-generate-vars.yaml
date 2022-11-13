@@ -4,7 +4,7 @@
 
     - name: generate global vars file for helm
       copy:
-        dest: ../../helm/generated-values.yaml
+        dest: ../../helm/secret.{{ secret_vars.deploy_env }}-values.yaml
         content: |
           global:
             deployEnv: {{ secret_vars.deploy_env }}
