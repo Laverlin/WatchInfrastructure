@@ -6,7 +6,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
     name                  = "${var.vm_name}"
     location              = var.location
     resource_group_name   = var.rg_name
-    network_interface_ids = [var.nic_id]
+    network_interface_ids = [var.nic.id]
     size                  = var.vm_size
     availability_set_id   = var.av_id
 
@@ -41,4 +41,22 @@ resource "azurerm_virtual_machine_data_disk_attachment" "data-disk-attachment" {
   lun                = "10"
   caching            = "None"
   count              = azurerm_linux_virtual_machine.vm.name == "barolo" ? 1: 0
+}
+
+
+resource "azurerm_lb_nat_rule" "ssh_rule" {
+  resource_group_name            = var.rg_name
+  loadbalancer_id                = var.load_balancer.id
+  name                           = "SSH-${var.vm_ssh_port}"
+  protocol                       = "Tcp"
+  frontend_port                  = var.vm_ssh_port
+  backend_port                   = 22
+  frontend_ip_configuration_name = var.load_balancer.frontend_ip_configuration[0].name
+  depends_on = [var.load_balancer]
+}
+
+resource "azurerm_network_interface_nat_rule_association" "nic_nat" {
+  network_interface_id  = var.nic.id
+  ip_configuration_name = var.nic.ip_configuration[0].name 
+  nat_rule_id           = azurerm_lb_nat_rule.ssh_rule.id
 }

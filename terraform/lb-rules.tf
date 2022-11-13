@@ -21,66 +21,6 @@ resource "azurerm_lb_rule"  "lb-rules"{
 #          NAT Rules
 ########################################
 
-// SSH Master
-//
-resource "azurerm_lb_nat_rule" "ssh_rule_master" {
-  resource_group_name            = azurerm_resource_group.rg.name
-  loadbalancer_id                = azurerm_lb.lb.id
-  name                           = "SSH-Master"
-  protocol                       = "Tcp"
-  frontend_port                  = 50022
-  backend_port                   = 22
-  frontend_ip_configuration_name = azurerm_lb.lb.frontend_ip_configuration[0].name
-  depends_on = [azurerm_lb.lb]
-}
-
-resource "azurerm_network_interface_nat_rule_association" "nic_nat_master" {
-  network_interface_id  = azurerm_network_interface.nic[0].id
-  ip_configuration_name = azurerm_network_interface.nic[0].ip_configuration[0].name 
-  nat_rule_id           = azurerm_lb_nat_rule.ssh_rule_master.id
-    depends_on = [azurerm_network_interface.nic]
-}
-
-// SSH Worker
-//
-resource "azurerm_lb_nat_rule" "ssh_rule_barbaresco" {
-  resource_group_name            = azurerm_resource_group.rg.name
-  loadbalancer_id                = azurerm_lb.lb.id
-  name                           = "SSH-barbaresco"
-  protocol                       = "Tcp"
-  frontend_port                  = 50122
-  backend_port                   = 22
-  frontend_ip_configuration_name = azurerm_lb.lb.frontend_ip_configuration[0].name
-  depends_on = [azurerm_lb.lb]
-}
-
-resource "azurerm_network_interface_nat_rule_association" "nic_nat_barbaresco" {
-  network_interface_id  = azurerm_network_interface.nic[1].id
-  ip_configuration_name = azurerm_network_interface.nic[1].ip_configuration[0].name 
-  nat_rule_id           = azurerm_lb_nat_rule.ssh_rule_barbaresco.id
-    depends_on = [azurerm_network_interface.nic]
-}
-
-// SSH Worker
-//
-resource "azurerm_lb_nat_rule" "ssh_rule_sfursat" {
-  resource_group_name            = azurerm_resource_group.rg.name
-  loadbalancer_id                = azurerm_lb.lb.id
-  name                           = "SSH-sfursat"
-  protocol                       = "Tcp"
-  frontend_port                  = 50222
-  backend_port                   = 22
-  frontend_ip_configuration_name = azurerm_lb.lb.frontend_ip_configuration[0].name
-  depends_on = [azurerm_lb.lb]
-}
-
-resource "azurerm_network_interface_nat_rule_association" "nic_nat_sfursat" {
-  network_interface_id  = azurerm_network_interface.nic[2].id
-  ip_configuration_name = azurerm_network_interface.nic[2].ip_configuration[0].name 
-  nat_rule_id           = azurerm_lb_nat_rule.ssh_rule_sfursat.id
-    depends_on = [azurerm_network_interface.nic]
-}
-
 /// KubeCtl
 ///
 resource "azurerm_lb_nat_rule" "kubectl_rule" {

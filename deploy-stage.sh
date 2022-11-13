@@ -7,6 +7,7 @@ sed -i -e '/deploy_env/s/prod/stage/g' terraform/secret.auto.tfvars
 
 echo "Deploy k8s cluster on azure"
 cd terraform
+terraform workspace select stage
 terraform import azurerm_managed_disk.shared-data-disk $AZURE_DISK_STAGE
 terraform apply --auto-approve -compact-warnings
 
@@ -19,5 +20,5 @@ then
 fi
 
 cd ../ansible
-ansible-playbook -i inventory-current.yaml setup-k8s.yaml
+ansible-playbook -i inventory-stage.yaml setup-k8s.yaml
 cd ..

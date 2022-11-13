@@ -29,7 +29,12 @@ variable "stage_namecom_fqn" {}
 variable "stage_namecom_host" {}
 variable "stage_namecom_entry_id" {}
 
+variable "project_name" {}
+
 locals {
+  project = "${var.project_name}-${var.deploy_env}"
+  resourcegroup = "${local.project}-rg" 
+
   namecom_fqn = var.deploy_env == "prod" ? var.prod_namecom_fqn : var.stage_namecom_fqn
   namecom_host = var.deploy_env == "prod" ? var.prod_namecom_host : var.stage_namecom_host
   namecom_entry_id = var.deploy_env == "prod" ? var.prod_namecom_entry_id : var.stage_namecom_entry_id
@@ -50,24 +55,12 @@ variable "ws_auth_token" {}
 variable "telegram_chat_id" {}
 variable "app_insights_key" {}
 
-variable "project_name" {}
-variable azure_resourcegroup {}
-variable azure_vnet {}
-variable azure_subnet {}
-variable azure_nsg {}
-
-
 variable "location" {}
 
 variable "node_count" {
   type = number
   default = 3
 }
-
-# variable "vm_size" {
-#   type = string
-#   default = "Standard_B2s"
-# }
 
 #############################################################################
 # PROVIDERS
@@ -88,30 +81,30 @@ provider "azurerm" {
 // Resource Group
 //
 resource "azurerm_resource_group" "rg" {
-  name     = "${var.azure_resourcegroup}"
+  name     = "${local.resourcegroup}"
   location = var.location
   tags = {
-      project = var.project_name
+      project = local.project
   }  
 }
 
 // Virtual Network
 //
 resource "azurerm_virtual_network" "vnet" {
-    name                = "${var.azure_vnet}"
+    name                = "${local.project}-vnet"
     address_space       = ["10.12.0.0/16"]
     location            = var.location
     resource_group_name = azurerm_resource_group.rg.name
 
     tags = {
-        project = var.project_name
+        project = local.project
     }
 }
 
 // Subnet
 //
 resource "azurerm_subnet" "subnet" {
-    name                 = "${var.azure_subnet}"
+    name                 = "${local.project}-subnet"
     resource_group_name  = azurerm_resource_group.rg.name
     virtual_network_name = azurerm_virtual_network.vnet.name
     address_prefixes       = ["10.12.0.0/24"]
@@ -127,13 +120,13 @@ resource "azurerm_subnet_network_security_group_association" "nsg_sub_ass" {
 // Public IP
 //
 resource "azurerm_public_ip" "public_ip" {
-    name                         = "${var.project_name}-ip"
+    name                         = "${local.project}-ip"
     location                     = var.location
     resource_group_name          = azurerm_resource_group.rg.name
     allocation_method            = "Static"
 
     tags = {
-        project = var.project_name
+        project = local.project
     }
 }
 
@@ -142,7 +135,7 @@ resource "azurerm_public_ip" "public_ip" {
 //
 resource "azurerm_network_interface" "nic" {
     count                       = var.node_count
-    name                        = "${var.project_name}-${format("%02d", count.index)}-nic"
+    name                        = "${local.project}-${format("%02d", count.index)}-nic"
     location                    = var.location
     resource_group_name         = azurerm_resource_group.rg.name
     enable_ip_forwarding        = true
@@ -164,14 +157,14 @@ resource "azurerm_network_interface" "nic" {
     # }
 
     tags = {
-        project = var.project_name
+        project = local.project
     }
 }
 
 // Load Balancer
 //
 resource "azurerm_lb" "lb" {
-  name                = "${var.project_name}-lb"
+  name                = "${local.project}-lb"
   location            = var.location
   resource_group_name = azurerm_resource_group.rg.name
 
@@ -214,19 +207,21 @@ resource "azurerm_availability_set" "avset" {
 module "vm-module" {
   source           = "./vm-module"
   for_each = {
-    "barolo"      = {size = "Standard_B1ms", nic-id = azurerm_network_interface.nic[0].id}
-    "barbaresco"  = {size = "Standard_B2s", nic-id = azurerm_network_interface.nic[1].id}
-    "sfursat"     = {size = "Standard_B2s", nic-id = azurerm_network_interface.nic[2].id}
+    "barolo"      = {size = "Standard_B1ms", nic = azurerm_network_interface.nic[0], port  = 50022}
+    "barbaresco"  = {size = "Standard_B2s", nic = azurerm_network_interface.nic[1], port  = 50122}
+    "sfursat"     = {size = "Standard_B2s", nic = azurerm_network_interface.nic[2], port  = 50222}
   }
   vm_name                 = "${each.key}"
   rg_name                 = azurerm_resource_group.rg.name
   location                = var.location
-  nic_id                  = each.value.nic-id
+  nic                     = each.value.nic
   admin_public_key_path   = var.admin_public_key_path
   admin_username          = var.admin_username
   vm_size                 = each.value.size
   shared_disk_id          = azurerm_managed_disk.shared-data-disk.id
   av_id                   = azurerm_availability_set.avset.id
+  vm_ssh_port             = each.value.port
+  load_balancer           = azurerm_lb.lb
 }
 
 
@@ -269,7 +264,7 @@ all:
     ansible_ssh_common_args: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null
     public_ip: ${azurerm_public_ip.public_ip.ip_address}
 EOF
-  filename = "../ansible/inventory-current.yaml"
+  filename = "../ansible/inventory-${var.deploy_env}.yaml"
 }
 
 #############################################################################
