@@ -19,9 +19,8 @@ data:
                 index index.html index.htm;
                 server_name _;
 
-                location / {
-                        try_files $uri $uri/ =404;
-                }
+                recursive_error_pages   on;
+                proxy_intercept_errors  on;
 
                 # error 404 handler
                 #
@@ -29,6 +28,10 @@ data:
                 location = /error404.html {
                         root /var/www/html;
                         internal;
+                }
+
+                location / {
+                        try_files $uri $uri/ = 404;
                 }
 
                 # Route list for Yet-Another-Sailing-App
@@ -50,9 +53,9 @@ data:
                 # Actual api for watch face app
                 #
                 location /watch-api/ {
-                        proxy_pass              http://watch-server/api/;
                         proxy_set_header        Host $host;
                         proxy_set_header        X-Real-IP $remote_addr;
+                        proxy_pass              http://watch-server/api/;
                 }
 
                 location /api/v2.0/YASail/ {
@@ -75,5 +78,6 @@ data:
                         access_log      off;
                         log_not_found   off;
                         try_files $uri =204;
-                }        
+                }
+
         }

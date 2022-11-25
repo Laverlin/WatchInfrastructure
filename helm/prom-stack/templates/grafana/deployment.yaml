@@ -110,7 +110,7 @@ spec:
 
       initContainers:
         - name: wait-postrges
-          image: postgres:alpine
+          image: ilaverlin/pg-client:latest
           command: ['sh', '-c', "until pg_isready -h {{ .Values.grafana.database.url }} -p {{ .Values.grafana.database.port }}; do  echo waiting for {{ .Values.grafana.database.url }}; sleep 5; done"]
 
       volumes:

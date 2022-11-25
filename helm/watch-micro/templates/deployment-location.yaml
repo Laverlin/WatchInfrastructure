@@ -18,6 +18,8 @@ spec:
         - name: {{ include "watch-micro.fullname" (list . .Values.location.nameSuffix) }}
           image: {{ .Values.location.imageRepo }}:{{ .Values.location.imageTag | default "latest" }}
           env:
+            - name: "DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE"
+              value: "false"
             - name: Serilog__WriteTo__0__Args__uri
               value: {{ .Values.lokiUrl }}
             - name: AppConfiguration__OpenTelemetryCollectorUrl

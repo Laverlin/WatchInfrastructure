@@ -18,6 +18,8 @@ spec:
         - name: {{ include "watch-micro.fullname" (list . .Values.yasBot.nameSuffix) }}
           image: {{ .Values.yasBot.imageRepo }}:{{ .Values.yasBot.imageTag | default "latest" }}
           env:
+            - name: "DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE"
+              value: "false"
             - name: Serilog__WriteTo__0__Args__uri
               value: {{ .Values.lokiUrl }}
             - name: BotConfiguration__OpenTelemetryCollectorUrl

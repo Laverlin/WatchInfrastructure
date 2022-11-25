@@ -1,0 +1,44 @@
+# Refresh material views
+#
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "postgres.fullname" . }}-refresh
+  labels:
+    {{- include "postgres.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: "0 9 * * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      #ttlSecondsAfterFinished: 600
+      backoffLimit: 0
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: {{ .Chart.Name }}-refresh
+              image: ilaverlin/pg-client:latest
+              command:
+                - /bin/sh
+                - -c
+                - >
+                    psql -d "{{ .Values.backupDatabase }}" -c "SELECT refresh_view('total_devices');";
+                    psql -d "{{ .Values.backupDatabase }}" -c "SELECT refresh_view('total_versions');";
+                    psql -d "{{ .Values.backupDatabase }}" -c "SELECT refresh_view('uniq_month');";
+              env:
+                - name: PGHOST
+                  value: "{{ include "postgres.fullname" . }}"
+                - name: PGPORT
+                  value: "{{ .Values.service.port }}"
+                - name: PGUSER
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "postgres.fullname" . }}
+                      key: PostgresUser
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "postgres.fullname" . }}
+                      key: PostgresPassword

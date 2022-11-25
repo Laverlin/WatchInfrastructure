@@ -33,6 +33,16 @@ spec:
                 secretKeyRef:
                   name: {{ include "vpn-server.fullname" . }}
                   key: VPN_PASSWORD
+            - name: VPN_ADDL_USERS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vpn-server.fullname" . }}
+                  key: VPN_EXTRA_USERS
+            - name: VPN_ADDL_PASSWORDS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "vpn-server.fullname" . }}
+                  key: VPN_EXTRA_PASSWORDS
           ports:
             - containerPort: 500
               protocol: UDP

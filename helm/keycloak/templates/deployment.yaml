@@ -38,7 +38,7 @@ spec:
             - name: KC_DB
               value: "postgres"
             - name: KC_DB_URL
-              value: "jdbc:postgresql://pg-server.database/keycloak"
+              value: "jdbc:postgresql://{{ .Values.postgres.server }}:{{ .Values.postgres.port }}/{{ .Values.postgres.database }}"
             - name: KC_DB_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -49,4 +49,7 @@ spec:
                 secretKeyRef:
                   name: {{ include "keycloak.fullname" . }}
                   key: PG_PASS
-
+      initContainers:
+        - name: wait-postrges
+          image: ilaverlin/pg-client:latest
+          command: ['sh', '-c', "until pg_isready -h {{ .Values.postgres.server }} -p {{ .Values.postgres.port }}; do  echo waiting for {{ .Values.postgres.server }}; sleep 5; done"]

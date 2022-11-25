@@ -38,6 +38,8 @@ spec:
               containerPort: {{ .Values.api.ports.api }}
               protocol: TCP
           env:
+            - name: "DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE"
+              value: "false"
             - name: Serilog__WriteTo__0__Args__uri
               value: {{ .Values.lokiUrl }}
             - name: ApiConfiguration__OpenTelemetryCollectorUrl

@@ -1,13 +1,13 @@
 apiVersion: traefik.containo.us/v1alpha1
 kind: IngressRoute
 metadata:
-  name: {{ include "watch-micro.fullname" (list . "") }}-watch-api
+  name: {{ include "watch-micro.fullname" (list . "") }}-default
   namespace: {{ .Release.Namespace }}
 spec:
   entryPoints:
     - websecure
   routes:
-    - match: PathPrefix(`/watch-api`)
+    - match: PathPrefix(`/`)
       kind: Rule
       services:
         - name: {{ include "watch-micro.fullname" (list . .Values.api.nameSuffix) }}

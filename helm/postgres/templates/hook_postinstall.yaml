@@ -48,7 +48,7 @@ spec:
           value: "create"
 
       - name: {{ .Chart.Name }}-createdb
-        image: postgres:alpine
+        image: ilaverlin/pg-client:latest
         env:
           - name: PGHOST
             value: "{{ include "postgres.fullname" . }}"
@@ -73,7 +73,7 @@ spec:
 
       initContainers:
       - name: wait-postrges
-        image: postgres:alpine
+        image: ilaverlin/pg-client:latest
         command: ['sh', '-c', "until pg_isready -h {{ include "postgres.fullname" . }} -p {{ .Values.service.port }}; do  echo waiting for {{ include "postgres.fullname" . }}; sleep 5; done"]
       restartPolicy: Never
   backoffLimit: 0

@@ -128,6 +128,20 @@ spec:
             runAsUser: 1001
             runAsGroup: 2001
 
+      initContainers:
+        - name: wait-keycloak
+          image: busybox:latest
+          command:
+            - /bin/sh
+            - -c
+            - >
+              until [ $(wget --server-response --no-check-certificate {{ .Values.global.oidcIssuerUrl }} -q -O dev/null 2>&1 | awk '/^  HTTP/{print $2}') == "200" ]; 
+              do 
+                echo waiting for keycloak: {{ .Values.global.oidcIssuerUrl }}; 
+                sleep 5; 
+              done
+
+
       volumes:
         - name: kubernetes-dashboard-certs
           secret:

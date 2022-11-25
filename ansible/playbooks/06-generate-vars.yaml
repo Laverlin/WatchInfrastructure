@@ -43,6 +43,8 @@
             vpnIpsecPsk: '{{ secret_vars.vpn_pre_shared_key }}'
             vpnUser: '{{ secret_vars.vpn_username }}'
             vpnPassword: '{{ secret_vars.vpn_password }}'
+            vpnExtraUsers: '{{ secret_vars.vpn_extra_users }}'
+            vpnExtraPasswords: '{{ secret_vars.vpn_extra_passwords }}'
 
 
 
