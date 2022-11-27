@@ -29,3 +29,9 @@ securityContext:
 ports:
   vpnPort: 31820
   oauth: 8008
+
+
+wgClient:
+  mtu: 1350
+  dns: 1.1.1.1
+  keepAlive: 25

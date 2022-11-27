@@ -102,8 +102,13 @@ spec:
               {{- end }}
             - name: WG_PORT
               value: {{ .Values.ports.vpnPort | quote }}
+            - name: WG_MTU
+              value: {{ .Values.wgClient.mtu | quote }}
             - name: WG_PERSISTENT_KEEPALIVE
-              value: "5"
+              value: {{ .Values.wgClient.keepAlive | quote }}
+            - name: WG_DEFAULT_DNS
+              value: {{ .Values.wgClient.dns | quote }}
+
           volumeMounts:
             - name: configs
               mountPath: /etc/wireguard
