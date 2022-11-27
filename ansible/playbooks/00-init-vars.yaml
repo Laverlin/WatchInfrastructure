@@ -27,6 +27,7 @@
           telegram_bot_api_token: "{{ secret_vars.dev_telegram_bot_api_token }}"
           kc_clientsecret_k8s: "{{ secret_vars.dev_kc_clientsecret_k8s }}"
           kc_clientsecret_gf: "{{ secret_vars.dev_kc_clientsecret_gf }}"
+          kc_clientsecret_wireguard: "{{ secret_vars.dev_kc_clientsecret_wireguard }}"
       when: secret_vars.deploy_env == 'dev'
 
     - name: define STAGE variables
@@ -38,6 +39,7 @@
           telegram_bot_api_token: "{{ secret_vars.stage_telegram_bot_api_token }}"
           kc_clientsecret_k8s: "{{ secret_vars.stage_kc_clientsecret_k8s }}"
           kc_clientsecret_gf: "{{ secret_vars.stage_kc_clientsecret_gf }}"
+          kc_clientsecret_wireguard: "{{ secret_vars.stage_kc_clientsecret_wireguard }}"
       when: secret_vars.deploy_env == 'stage'
 
     - name: define PROD variables
@@ -49,6 +51,7 @@
           telegram_bot_api_token: "{{ secret_vars.prod_telegram_bot_api_token }}"
           kc_clientsecret_k8s: "{{ secret_vars.prod_kc_clientsecret_k8s }}"
           kc_clientsecret_gf: "{{ secret_vars.prod_kc_clientsecret_gf }}"
+          kc_clientsecret_wireguard: "{{ secret_vars.prod_kc_clientsecret_wireguard }}"
       when: secret_vars.deploy_env == 'prod'
 
     - name: define common vars

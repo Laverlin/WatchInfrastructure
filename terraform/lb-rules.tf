@@ -4,6 +4,7 @@ resource "azurerm_lb_rule"  "lb-rules"{
     HTTPS = { protocol = "Tcp", fr-port = 443, bk-port = 443 }
     UDP-500 = { protocol = "Udp", fr-port = 500, bk-port = 30500 }
     UDP-4500 = { protocol = "Udp", fr-port = 4500, bk-port = 30450 }
+    WG = { protocol = "Udp", fr-port = 31820, bk-port = 31820 }
   }
 
   loadbalancer_id                = azurerm_lb.lb.id

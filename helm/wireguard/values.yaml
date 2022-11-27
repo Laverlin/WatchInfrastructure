@@ -1,0 +1,31 @@
+
+image:
+  repository: weejewel/wg-easy
+  tag: "latest"
+
+nameOverride: ""
+fullnameOverride: ""
+
+dashboardPath: "/dashboard/wireguard"
+
+securityContext: 
+  capabilities:
+    add:
+      - NET_ADMIN
+      - SYS_MODULE
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+  privileged: true
+  allowPrivilegeEscalation: true
+  # sysctls:
+  # - name: net.ipv4.conf.all.src_valid_mark
+  #   value: "1"
+  # - name: net.ipv4.ip_forward
+  #   value: "1"
+
+ports:
+  vpnPort: 31820
+  oauth: 8008

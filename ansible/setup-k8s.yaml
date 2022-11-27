@@ -51,4 +51,5 @@
         - { helmName: 'watch-api-mono', namespace: 'watch-backend', isWait: false }
         - { helmName: 'watch-micro', namespace: 'watch-backend', isWait: false }
         - { helmName: 'vpn-server', namespace: 'tools', isWait: false }
+        - { helmName: 'wireguard', namespace: 'tools', isWait: false }
 

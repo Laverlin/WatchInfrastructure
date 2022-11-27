@@ -8,6 +8,12 @@
   gather_facts: true
   tasks:
 
+    - name: Update and upgrade apt packages
+      apt:
+        upgrade: yes
+        update_cache: yes
+        cache_valid_time: 86400
+
     - name: Get data disk if exists
       ansible.builtin.shell: 'lsblk -o label | grep -i "shared-disk" || true'
       register: disk_output
@@ -108,6 +114,12 @@
   become_user: root
   gather_facts: true
   tasks:
+
+    - name: Update and upgrade apt packages
+      apt:
+        upgrade: yes
+        update_cache: yes
+        cache_valid_time: 86400
 
     - name: Install NFS client
       ansible.builtin.apt: 

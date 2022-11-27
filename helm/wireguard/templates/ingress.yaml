@@ -1,0 +1,42 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "wireguard.fullname" . }}-rewrite
+  namespace: {{ .Release.Namespace }}
+spec:
+ replacePathRegex:
+    regex: ^{{ .Values.dashboardPath }}(/|\b)(.*)
+    replacement: /$2
+---
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "wireguard.fullname" . }}-headers
+  namespace: {{ .Release.Namespace }}
+spec:
+  headers:
+    customRequestHeaders:
+      X-Auth-Request-Redirect: https://{{ .Values.global.domainName }}{{ .Values.dashboardPath }}/
+    customResponseHeaders:
+      X-Auth-Request-Redirect: https://{{ .Values.global.domainName }}{{ .Values.dashboardPath }}/
+---
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "wireguard.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+  - websecure
+  routes:
+  - match: PathPrefix(`{{ .Values.dashboardPath }}/`)
+    kind: Rule
+    middlewares:
+    - name: {{ include "wireguard.fullname" . }}-rewrite
+    - name: {{ include "wireguard.fullname" . }}-headers
+    services:
+    - name: {{ include "wireguard.fullname" . }}
+      port: {{ .Values.ports.oauth }}
+  tls: {}
