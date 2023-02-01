@@ -57,3 +57,10 @@ app.kubernetes.io/instance: {{ $top.Release.Name }}
 {{- end }}
 
 
+{{- define "otelUrlWithHttp" -}}
+{{- printf "%s://%s:%d" .Values.otelCollectorEndpoint.scheme .Values.otelCollectorEndpoint.url ( .Values.otelCollectorEndpoint.port | int ) }}
+{{- end }}
+
+{{- define "otelUrl" -}}
+{{- printf "%s:%d" .Values.otelCollectorEndpoint.url ( .Values.otelCollectorEndpoint.port | int )}}
+{{- end }}

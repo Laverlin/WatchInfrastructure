@@ -52,4 +52,5 @@
         - { helmName: 'watch-micro', namespace: 'watch-backend', isWait: false }
         - { helmName: 'vpn-server', namespace: 'tools', isWait: false }
         - { helmName: 'wireguard', namespace: 'tools', isWait: false }
+        - { helmName: 'promtail', namespace: 'monitoring', isWait: false }
 

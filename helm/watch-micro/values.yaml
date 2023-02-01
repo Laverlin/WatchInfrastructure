@@ -2,7 +2,10 @@ nameOverride: ""
 fullnameOverride: ""
 
 lokiUrl: http://loki.monitoring:3100
-otelCollectorUrl: http://otel-collector.monitoring:4317
+otelCollectorEndpoint:
+  scheme: "http"
+  url: otel-collector.monitoring
+  port: 4317
 pgServer: pg-server.database
 pgPort: 5432
 kafkaServer: kafka.database:9092
@@ -64,3 +67,24 @@ dbSink:
   resources:
     requests:
       memory: 50Mi
+
+reader:
+  nameSuffix: reader
+  replicaCount: 1
+  imageRepo: ilaverlin/watchcluster-reader
+  imageTag: "latest"
+  ports:
+    service: 8989
+    nodePort: 30898
+  resources:
+    requests:
+      memory: 20Mi
+
+manager:
+  nameSuffix: manager
+  replicaCount: 1
+  imageRepo: ilaverlin/watchcluster-manager
+  imageTag: "latest"
+  resources:
+    requests:
+      memory: 20Mi

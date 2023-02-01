@@ -23,9 +23,9 @@ spec:
             - name: Serilog__WriteTo__0__Args__uri
               value: {{ .Values.lokiUrl }}
             - name: DbSinkConfiguration__OpenTelemetryCollectorUrl
-              value: {{ .Values.otelCollectorUrl }}
+              value: {{ include "otelUrlWithHttp" . }}
             - name: KafkaConfiguration__BootstrapServers
-              value: {{ .Values.kafkaServer }}        
+              value: {{ .Values.kafkaServer }}
             - name: PgProviderConfiguration__server
               value: {{ .Values.pgServer }}
             - name: PgProviderConfiguration__UserId

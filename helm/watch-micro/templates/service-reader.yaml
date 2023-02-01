@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "watch-micro.fullname" (list . .Values.reader.nameSuffix) }}
+  labels:
+    {{- include "watch-micro.labels" (list . .Values.reader.nameSuffix) | nindent 4 }}
+spec:
+  selector:
+    {{- include "watch-micro.selectorLabels" (list . .Values.reader.nameSuffix) | nindent 4 }}
+  {{- if eq .Values.global.deployEnv "dev" }}
+  type: NodePort
+  {{- else }}
+  type: ClusterIP
+  {{- end }}
+  ports:
+    - port: {{ .Values.reader.ports.service }}
+      targetPort: {{ .Values.reader.ports.service }}
+      protocol: TCP
+      name: http
+      {{- if eq .Values.global.deployEnv "dev" }}
+      nodePort: {{ .Values.reader.ports.nodePort }}
+      {{- end }}

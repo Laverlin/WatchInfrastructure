@@ -20,6 +20,7 @@
             azContainerName: {{ secret_vars.azure_container_name }}
             pgUser: {{ envs.postgres_user }}
             pgPass: {{ envs.postgres_password }}
+            pgUrl: 'postgres://{{ envs.postgres_user }}:{{ envs.postgres_password }}@pg-server.database:5432/WatchService'
 
             oauthCookieSecret: {{ secret_vars.oauth_cookiesecret }}
             kcClientIdK8s: {{ secret_vars.kc_clientid_k8s }}

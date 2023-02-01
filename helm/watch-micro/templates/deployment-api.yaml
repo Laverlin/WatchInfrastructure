@@ -43,7 +43,7 @@ spec:
             - name: Serilog__WriteTo__0__Args__uri
               value: {{ .Values.lokiUrl }}
             - name: ApiConfiguration__OpenTelemetryCollectorUrl
-              value: {{ .Values.otelCollectorUrl }}
+              value: {{ include "otelUrlWithHttp" . }}
             - name: KafkaConfiguration__BootstrapServers
               value: {{ .Values.kafkaServer }}
             - name: PgProviderConfiguration__server

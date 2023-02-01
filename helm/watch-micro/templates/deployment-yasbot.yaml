@@ -23,7 +23,7 @@ spec:
             - name: Serilog__WriteTo__0__Args__uri
               value: {{ .Values.lokiUrl }}
             - name: BotConfiguration__OpenTelemetryCollectorUrl
-              value: {{ .Values.otelCollectorUrl }}
+              value: {{ include "otelUrlWithHttp" . }}
             - name: BotConfiguration__BaseStorageApiUrl
               value: http://{{ include "watch-micro.fullname" (list . .Values.api.nameSuffix) }}:{{ .Values.api.ports.service }}/api/v2.0/YASail/
             - name: BotConfiguration__BotApiKey
@@ -31,6 +31,8 @@ spec:
                 secretKeyRef:
                   name: {{ include "watch-micro.fullname" (list . "") }}
                   key: telegramBotApiToken
+            - name: KafkaConfiguration__BootstrapServers
+              value: {{ .Values.kafkaServer }}
           startupProbe:
             httpGet:
               path: /health/ready

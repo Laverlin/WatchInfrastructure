@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "watch-micro.fullname" (list . .Values.manager.nameSuffix) }}
+  labels:
+    {{- include "watch-micro.labels" (list . .Values.manager.nameSuffix) | nindent 4 }}
+spec:
+  replicas: {{ .Values.manager.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "watch-micro.selectorLabels" (list . .Values.manager.nameSuffix) | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        wb.io/export_logs: "true"
+      labels:
+        {{- include "watch-micro.selectorLabels" (list . .Values.manager.nameSuffix) | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ include "watch-micro.fullname" (list . .Values.manager.nameSuffix) }}
+          image: {{ .Values.manager.imageRepo }}:{{ .Values.manager.imageTag | default "latest" }}
+          env:
+            - name: YASR_logLevel
+              value: {{ if eq .Values.global.deployEnv "prod" -}}"2"{{ else }}"-1"{{- end }}
+            - name: YASR_otelEndpoint
+              value: {{ include "otelUrl" . }}
+            - name: YASR_kafka_broker
+              value: {{ .Values.kafkaServer }}
+            - name: YASR_kafka_topicName
+              value: "yas-manager"
+            - name: YASR_pgUrl
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "watch-micro.fullname" (list . "") }}
+                  key: pgUrl
+
+
+          resources:
+            {{- toYaml .Values.manager.resources | nindent 12 }}
