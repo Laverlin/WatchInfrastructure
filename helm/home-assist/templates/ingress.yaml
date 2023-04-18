@@ -1,0 +1,20 @@
+
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "home-assist.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+  - websecure
+  routes:
+  - match: Host(`ha.{{ .Values.global.domainName }}`) #PathPrefix(`{{ .Values.servicePath }}/`)
+    kind: Rule
+    middlewares:
+    # - name: {{ include "home-assist.fullname" . }}-rewrite
+    # - name: {{ include "home-assist.fullname" . }}-headers
+    services:
+    - name: {{ include "home-assist.fullname" . }}
+      port: {{ .Values.service.port }}
+  tls: {}

@@ -4,14 +4,17 @@
 
 image:
   repository: postgres
-  tag: "alpine"
+  tag: ""
 
 nameOverride: ""
 fullnameOverride: "pg-server"
 
 pgSecret: "postgres"
 
-resources: {}
+resources:
+  limits:
+    memory: 500Mi
+    hugepages-2Mi: 500Mi
 #   requests:
 #     cpu: ".2"
 #     memory: "100Mi"

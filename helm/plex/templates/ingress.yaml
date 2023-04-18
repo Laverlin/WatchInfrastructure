@@ -1,0 +1,36 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "plex.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`plex.ivan-b.com`)
+      kind: Rule
+      # middlewares:
+      #   # - name: ip-filter
+      #   - name: plex-redirect
+      services:
+        - name: {{ include "plex.fullname" . }}
+          port: {{ .Values.global.plexPort }}
+  tls: {}
+
+
+---
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: {{ include "plex.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - plex
+  routes:
+    - match: HostSNI(`*`)
+      kind: Rule
+      services:
+        - name: {{ include "plex.fullname" . }}
+          port: {{ .Values.global.plexPort }}
+

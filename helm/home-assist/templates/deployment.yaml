@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "home-assist.fullname" . }}
+  labels:
+    {{- include "home-assist.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "home-assist.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "home-assist.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          ports:
+            - name: http
+              containerPort: 8123
+              protocol: TCP
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: config-home
+              mountPath: /config
+            - name: time
+              mountPath: /etc/localtime
+      volumes:
+        - name: config-home
+          hostPath:
+            path: {{ .Values.global.storageRoot }}/persist/home-assist
+            type: DirectoryOrCreate
+        - name: time
+          hostPath:
+            path: /etc/localtime
+            type: File
+

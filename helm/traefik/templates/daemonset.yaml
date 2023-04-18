@@ -46,6 +46,12 @@ spec:
             - --entrypoints.web.http.redirections.entryPoint.scheme=https
             - --entrypoints.web.http.redirections.entrypoint.permanent=true
 
+            {{- if eq .Values.global.deployEnv "dev" }}
+            - --entryPoints.tcpptp.address=:{{ .Values.global.qbtPort }}
+            - --entryPoints.udpptp.address=:{{ .Values.global.qbtPort }}/udp
+            - --entryPoints.plex.address=:{{ .Values.global.plexPort }}
+            {{- end }}
+
             - --providers.kubernetescrd=true
             - --providers.kubernetesingress=true
 
@@ -78,6 +84,13 @@ spec:
             - name: {{ .Values.ports.internal.name }}
               containerPort: 8080
               hostPort: {{ .Values.ports.internal.hostPort }}
+            - name: "plex-port"
+              containerPort: {{ .Values.global.plexPort }}
+              hostPort: {{ .Values.global.plexPort }}
+            - name: "qbt"
+              containerPort: {{ .Values.global.qbtPort }}
+              hostPort: {{ .Values.global.qbtPort }}
+
           volumeMounts:
             - mountPath: /logs
               name: tr-logs

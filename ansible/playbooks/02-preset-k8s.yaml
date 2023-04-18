@@ -65,8 +65,20 @@
           - curl
           - gnupg-agent
           - software-properties-common
-          - containerd
         state: present
+
+    - name: Install containerd
+      ansible.builtin.command: "{{ item }}"
+      with_items: 
+        - wget https://github.com/containerd/containerd/releases/download/v1.6.12/containerd-1.6.12-linux-amd64.tar.gz
+        - tar Czxvf /usr/local containerd-1.6.12-linux-amd64.tar.gz
+        - wget https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
+        - mv containerd.service /usr/lib/systemd/system/
+        - wget https://github.com/opencontainers/runc/releases/download/v1.1.1/runc.amd64
+        - install -m 755 runc.amd64 /usr/local/sbin/runc
+      args:
+        creates: /usr/local/sbin/runc
+
 
     - name: Create containerd config folder
       ansible.builtin.file:
@@ -74,7 +86,7 @@
         state: directory
 
     - name: Configure containerd
-      shell: "/usr/bin/containerd config default > /etc/containerd/config.toml"
+      shell: "/usr/local/bin/containerd config default > /etc/containerd/config.toml"
       args:
         creates: /etc/containerd/config.toml
 
@@ -87,6 +99,11 @@
         state: restarted
         enabled: yes
         daemon-reload: yes
+    # - name: Enable containerd service, and start it
+    #   ansible.builtin.command: "{{ item }}"
+    #   with_items: 
+    #     - systemctl daemon-reload
+    #     - systemctl enable --now containerd
 
     ## Install kube* modules
     ##

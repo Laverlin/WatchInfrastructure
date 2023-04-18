@@ -1,0 +1,8 @@
+- import_playbook: playbooks/00-init-vars.yaml
+- import_playbook: playbooks/06-generate-vars.yaml
+
+## Deploy helm charts
+##
+## Deploy helm charts
+##
+- import_playbook: playbooks/08-deploy-charts.yaml

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "plex.fullname" . }}
+  labels:
+    {{- include "plex.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.global.plexPort }}
+      targetPort: main
+      protocol: TCP
+      name: main
+
+  selector:
+    {{- include "plex.selectorLabels" . | nindent 4 }}

@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "plex.fullname" . }}
+  labels:
+    {{- include "plex.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "plex.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "plex.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          ports:
+            - name: main
+              containerPort: {{ .Values.global.plexPort }}
+              protocol: TCP
+
+          env:
+            - name: PLEX_CLAIM
+              value: claim-L5yVPUixapXfugnUsT82
+            - name: ADVERTISE_IP
+              value: http://{{ .Values.global.publicIp }}:32400/,http://plex.ivan-b.com:32400/
+            - name: ALLOWED_NETWORKS
+              value: {{ .Values.global.podSubnet }}
+
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: movies
+              mountPath: /movies
+            - name: movies-archive
+              mountPath: /movies-archive
+            - name: serials
+              mountPath: /serials
+            - name: other
+              mountPath: /other
+            - name: music
+              mountPath: /music
+
+          extraVolumeMounts:
+            - name: dri
+              mountPath: /dev/dri
+
+      volumes:
+        - name: config
+          hostPath:
+            path: /mnt/data-disk/config/plex
+        - name: movies
+          hostPath:
+            path: /mnt/data-disk/Torrent/Movies
+        - name: movies-archive
+          hostPath:
+            path: /mnt/data-disk/Movies
+        - name: serials
+          hostPath:
+            path: /mnt/data-disk/Torrent/Serials
+        - name: other
+          hostPath:
+            path: /mnt/data-disk/Misc
+        - name: music
+          hostPath:
+            path: /mnt/data-disk/Music
+
+      extraVolumes:
+        - name: dri
+          hostPath:
+            path: /dev/dri
+
+
+
+

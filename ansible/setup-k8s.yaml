@@ -16,41 +16,13 @@
 
 - import_playbook: playbooks/07-copy-configs.yaml
 
+# - import_playbook: playbooks/08-add-users.yaml
+#   when: secret_vars.deploy_env == 'dev'
+
 ## Deploy helm charts
 ##
-- name: Deploy helm charts 
-  hosts: localhost
-  tasks:
-
-    - debug:
-        msg: "Current Environment: {{ secret_vars.deploy_env }}"
+- import_playbook: playbooks/08-deploy-charts.yaml
 
 
-    - name: deploy helm charts
-      kubernetes.core.helm:
-        kubeconfig: '~/remote-kube/{{ ansible_host }}/config'
-        name: '{{ item.helmName }}'
-        chart_ref: '../helm/{{ item.helmName }}'
-        values_files: 
-          - '../helm/secret.{{ secret_vars.deploy_env }}-values.yaml'
-        release_namespace: '{{ item.namespace }}'
-        create_namespace: true
-        wait: '{{ item.isWait }}'
 
-      loop:
-        - { helmName: 'acme-sh', namespace: 'ingress', isWait: true }
-        - { helmName: 'traefik', namespace: 'ingress', isWait: false }
-        - { helmName: 'postgres', namespace: 'database', isWait: false }
-        - { helmName: 'kafka', namespace: 'database', isWait: false }
-        - { helmName: 'keycloak', namespace: 'monitoring', isWait: false }
-        - { helmName: 'kubernetes-dashboard', namespace: 'monitoring', isWait: false }
-        - { helmName: 'prom-stack', namespace: 'monitoring', isWait: false }
-        - { helmName: 'loki', namespace: 'monitoring', isWait: false }
-        - { helmName: 'tempo', namespace: 'monitoring', isWait: false }
-        - { helmName: 'otel-collector', namespace: 'monitoring', isWait: false }
-        - { helmName: 'watch-api-mono', namespace: 'watch-backend', isWait: false }
-        - { helmName: 'watch-micro', namespace: 'watch-backend', isWait: false }
-        - { helmName: 'vpn-server', namespace: 'tools', isWait: false }
-        - { helmName: 'wireguard', namespace: 'tools', isWait: false }
-        - { helmName: 'promtail', namespace: 'monitoring', isWait: false }
 

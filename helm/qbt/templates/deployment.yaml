@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "qbt.fullname" . }}
+  labels:
+    {{- include "qbt.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "qbt.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "qbt.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+
+          env:
+            - name: QBT_EULA
+              value: "yes"
+            - name: QBT_VERSION
+              value: "{{ .Values.image.tag }}"
+            - name: QBT_WEBUI_PORT
+              value: "{{ .Values.service.webPort }}"
+            - name: QBT_CONFIG_PATH
+              value: "/config"
+            - name: QBT_DOWNLOADS_PATH
+              value: "/downloads"
+            - name: PUID
+              value: "1010" #"{{ .Values.securityContext.runAsUser }}"
+            - name: PGID
+              value: "100" #"{{ .Values.podSecurityContext.runAsGroup }}"
+
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.webPort }}
+              protocol: TCP
+            - name: ptp-tcp
+              containerPort: {{ .Values.service.ptpPortContainer }}
+              protocol: TCP
+            - name: ptp-udp
+              containerPort: {{ .Values.service.ptpPortContainer }}
+              protocol: UDP
+
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+          volumeMounts:
+            - name: config
+              mountPath: /config
+            - name: downloads
+              mountPath: /downloads
+            - name: misc
+              mountPath: /misc
+
+      volumes:
+        - name: config
+          hostPath:
+            path: /mnt/data-disk/config/gbt
+        - name: downloads
+          hostPath:
+            path: /mnt/data-disk/Torrent
+        - name: misc
+          hostPath:
+            path: /mnt/data-disk/Misc

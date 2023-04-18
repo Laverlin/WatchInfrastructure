@@ -20,7 +20,6 @@ spec:
       containers:
         - name: kubectl
           image:  ilaverlin/k8s-client:latest  #"bitnami/kubectl:latest"
-          imagePullPolicy: "IfNotPresent"
           command:
           - /bin/sh
           - -c

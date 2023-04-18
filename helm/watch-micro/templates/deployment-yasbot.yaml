@@ -24,6 +24,8 @@ spec:
               value: {{ .Values.lokiUrl }}
             - name: BotConfiguration__OpenTelemetryCollectorUrl
               value: {{ include "otelUrlWithHttp" . }}
+            - name: BotConfiguration__BaseReaderApiUrl
+              value: http://{{ include "watch-micro.fullname" (list . .Values.reader.nameSuffix) }}:{{ .Values.reader.ports.service }}
             - name: BotConfiguration__BaseStorageApiUrl
               value: http://{{ include "watch-micro.fullname" (list . .Values.api.nameSuffix) }}:{{ .Values.api.ports.service }}/api/v2.0/YASail/
             - name: BotConfiguration__BotApiKey

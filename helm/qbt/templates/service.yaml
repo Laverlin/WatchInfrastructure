@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "qbt.fullname" . }}
+  labels:
+    {{- include "qbt.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.webPort }}
+      targetPort: http
+      protocol: TCP
+      name: http
+    - port: {{ .Values.global.qbtPort }}
+      targetPort: {{ .Values.service.ptpPortContainer }}
+      protocol: TCP
+      name: ptp-tcp
+    - port: {{ .Values.global.qbtPort }}
+      targetPort: {{ .Values.service.ptpPortContainer }}
+      protocol: UDP
+      name: ptp-udp
+  selector:
+    {{- include "qbt.selectorLabels" . | nindent 4 }}
