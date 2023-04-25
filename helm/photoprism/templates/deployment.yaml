@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "photoprism.fullname" . }}
+  labels:
+    {{- include "photoprism.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "photoprism.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "photoprism.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+
+          env:
+            - name: HOME
+              value: /photoprism
+            - name: PHOTOPRISM_ADMIN_PASSWORD
+              value: "changeit"
+            - name: PHOTOPRISM_DARKTABLE_PRESETS
+              value: "false"
+            # - name: PHOTOPRISM_DATABASE_DRIVER
+            #   value: sqlite
+            - name: PHOTOPRISM_DEBUG
+              value: "false"
+            - name: PHOTOPRISM_DETECT_NSFW
+              value: "false"
+            - name: PHOTOPRISM_DISABLE_CHOWN
+              value: "false"
+            - name: PHOTOPRISM_DISABLE_CLASSIFICATION
+              value: "false"
+            - name: PHOTOPRISM_DISABLE_FACES
+              value: "false"
+            - name: PHOTOPRISM_DISABLE_SETTINGS
+              value: "false"
+            - name: PHOTOPRISM_DISABLE_TENSORFLOW
+              value: "false"
+            - name: PHOTOPRISM_DISABLE_WEBDAV
+              value: "false"
+            - name: PHOTOPRISM_EXPERIMENTAL
+              value: "false"
+            - name: PHOTOPRISM_HTTP_COMPRESSION
+              value: gzip
+            - name: PHOTOPRISM_ORIGINALS_LIMIT
+              value: "5000"
+            - name: PHOTOPRISM_PUBLIC
+              value: "false"
+            - name: PHOTOPRISM_READONLY
+              value: "false"
+            - name: PHOTOPRISM_SITE_AUTHOR
+              value: ""
+            - name: PHOTOPRISM_SITE_CAPTION
+              value: Browse Your Life
+            - name: PHOTOPRISM_SITE_DESCRIPTION
+              value: ""
+            - name: PHOTOPRISM_SITE_TITLE
+              value: PhotoPrism
+            - name: PHOTOPRISM_SITE_URL
+              value: https://photo.ivan-b.com/
+            - name: PHOTOPRISM_UPLOAD_NSFW
+              value: "true"
+
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+          volumeMounts:
+            - mountPath: /photoprism/originals
+              name: originals
+            - mountPath: /photoprism/storage
+              name: storage
+
+      volumes:
+        - name: originals
+          hostPath:
+            path: /mnt/data-disk/services/photoprism/originals
+            type: DirectoryOrCreate
+        - name: storage
+          hostPath:
+            path: /mnt/data-disk/services/photoprism/storage
+            type: DirectoryOrCreate
+
+

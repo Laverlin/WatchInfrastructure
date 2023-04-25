@@ -1,0 +1,18 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "photoprism.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`photo.ivan-b.com`)
+      kind: Rule
+      # middlewares:
+      # #   # - name: ip-filter
+      #   - name: nc-redirect
+      services:
+        - name: {{ include "photoprism.fullname" . }}
+          port: {{ .Values.service.port }}
+  tls: {}

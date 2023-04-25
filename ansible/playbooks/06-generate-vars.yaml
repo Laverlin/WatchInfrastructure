@@ -34,7 +34,11 @@
             kcClientIdWireguard: {{ secret_vars.kc_clientid_wireguard }}
             kcClientSecretWireguard: {{ envs.kc_clientsecret_wireguard }}
             kcGroupWireguard: {{ secret_vars.kc_group_wireguard }}
+            kcGroupBtsync: {{ secret_vars.kc_group_btsync }}
+            kcClientIdBtsync: {{ secret_vars.kc_clientid_btsync }}
+            kcClientSecretBtsync: {{ envs.kc_clientsecret_btsync }}
             
+            NamecomDomain: {{ secret_vars.namecom_domain }}
             NamecomUser: {{ secret_vars.namecom_user }}
             NamecomToken: {{ secret_vars.namecom_token }}
             TelegramBotApiToken: {{ envs.telegram_bot_api_token }}
@@ -53,6 +57,4 @@
             vpnPassword: '{{ secret_vars.vpn_password }}'
             vpnExtraUsers: '{{ secret_vars.vpn_extra_users }}'
             vpnExtraPasswords: '{{ secret_vars.vpn_extra_passwords }}'
-
-
 

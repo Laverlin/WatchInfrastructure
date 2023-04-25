@@ -50,6 +50,9 @@ spec:
             - --entryPoints.tcpptp.address=:{{ .Values.global.qbtPort }}
             - --entryPoints.udpptp.address=:{{ .Values.global.qbtPort }}/udp
             - --entryPoints.plex.address=:{{ .Values.global.plexPort }}
+
+            - --entryPoints.sync-tcp.address=:55555
+            - --entryPoints.sync-udp.address=:55555/udp
             {{- end }}
 
             - --providers.kubernetescrd=true

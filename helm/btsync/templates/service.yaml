@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "btsync.fullname" . }}
+  labels:
+    {{- include "btsync.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.oauthPort }}
+      targetPort: {{ .Values.service.oauthPort }}
+      protocol: TCP
+      name: web
+    - port: {{ .Values.service.transferPort }}
+      targetPort: {{ .Values.service.transferPort }}
+      protocol: TCP
+      name: tr-tcp
+    - port: {{ .Values.service.transferPort }}
+      targetPort: {{ .Values.service.transferPort }}
+      protocol: UDP
+      name: tr-udp
+  selector:
+    {{- include "btsync.selectorLabels" . | nindent 4 }}

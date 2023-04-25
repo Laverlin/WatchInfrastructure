@@ -30,8 +30,8 @@ spec:
               protocol: TCP
 
           env:
-            - name: PLEX_CLAIM
-              value: claim-L5yVPUixapXfugnUsT82
+            # - name: PLEX_CLAIM
+            #   value: claim-L5yVPUixapXfugnUsT82
             - name: ADVERTISE_IP
               value: http://{{ .Values.global.publicIp }}:32400/,http://plex.ivan-b.com:32400/
             - name: ALLOWED_NETWORKS
@@ -61,7 +61,7 @@ spec:
       volumes:
         - name: config
           hostPath:
-            path: /mnt/data-disk/config/plex
+            path: /mnt/data-disk/services/plex
         - name: movies
           hostPath:
             path: /mnt/data-disk/Torrent/Movies

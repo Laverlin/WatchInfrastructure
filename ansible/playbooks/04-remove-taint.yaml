@@ -1,5 +1,5 @@
 - name: Remove taint
-  hosts: all
+  hosts: master
   become: false
 
   tasks:    

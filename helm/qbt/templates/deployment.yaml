@@ -68,7 +68,7 @@ spec:
       volumes:
         - name: config
           hostPath:
-            path: /mnt/data-disk/config/gbt
+            path: /mnt/data-disk/services/qbt
         - name: downloads
           hostPath:
             path: /mnt/data-disk/Torrent

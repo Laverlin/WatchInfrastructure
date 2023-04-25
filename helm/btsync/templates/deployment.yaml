@@ -1,0 +1,122 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "btsync.fullname" . }}
+  labels:
+    {{- include "btsync.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "btsync.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "btsync.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+
+        # OAuth container
+        #
+        - name: oauth2-proxy
+          image: quay.io/oauth2-proxy/oauth2-proxy:latest
+          args:
+          - --alpha-config=/config/alpha-config.yaml
+          env:
+          - name: OAUTH2_PROXY_EMAIL_DOMAINS
+            value: "*"
+          - name: OAUTH2_PROXY_REVERSE_PROXY
+            value: "true"
+          - name: OAUTH2_PROXY_REDIRECT_URL
+            value: "https://{{ include "domainNamePrefix" . }}{{ .Values.global.NamecomDomain }}/oauth2/callback"
+          - name: OAUTH2_PROXY_CLIENT_ID
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "btsync.fullname" . }}
+                key: clientId 
+          - name: OAUTH2_PROXY_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "btsync.fullname" . }}
+                key: clientSecret 
+          - name: OAUTH2_PROXY_COOKIE_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: {{ include "btsync.fullname" . }}
+                key: cookieSecret 
+          - name: OAUTH2_PROXY_UPSTREAMS
+            value: http://127.0.0.1:{{ .Values.service.containerPort }}/ # , http://localhost:80/whoami/
+          - name: OAUTH2_PROXY_SSL_INSECURE_SKIP_VERIFY
+            value: "true"
+          - name: OAUTH2_PROXY_COOKIE_DOMAINS
+            value: ".{{ .Values.global.NamecomDomain }},{{ include "domainNamePrefix" . }}{{ .Values.global.NamecomDomain }}"
+          - name: OAUTH2_PROXY_INSECURE_OIDC_ALLOW_UNVERIFIED_EMAIL
+            value: "true"
+          - name: OAUTH2_PROXY_COOKIE_SECURE
+            value: "false"
+          - name: OAUTH2_PROXY_PASS_AUTHORIZATION_HEADER
+            value: "false"
+          - name: OAUTH2_PROXY_SSL_UPSTREAM_INSECURE_SKIP_VERIFY
+            value: "true"
+
+          - name: OAUTH2_PROXY_SKIP_PROVIDER_BUTTON
+            value: "true"
+          - name: OAUTH2_PROXY_SET_AUTHORIZATION_HEADER
+            value: "false"
+          - name: OAUTH2_PROXY_WHITELIST_DOMAINS
+            value: ".{{ .Values.global.NamecomDomain }},{{ include "domainNamePrefix" . }}{{ .Values.global.NamecomDomain }}"
+          ports:
+            - containerPort: {{ .Values.service.oauthPort }}
+          volumeMounts:
+            - name: alpha-conf
+              mountPath: /config
+
+
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          env:
+            - name: PUID 
+              value: "1000"
+            - name: PGID 
+              value: "1000"
+          ports:
+            - containerPort: {{ .Values.service.containerPort }}
+              protocol: TCP
+            - containerPort: {{ .Values.service.transferPort }}
+              protocol: TCP
+            - containerPort: {{ .Values.service.transferPort }}
+              protocol: UDP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+
+          volumeMounts:
+            - mountPath: /sync
+              name: data
+            - mountPath: /config
+              name: config
+            - mountPath: /download
+              name: download
+
+      volumes:
+        - name: data
+          hostPath:
+            path: /mnt/data-disk/services/btsync/data
+            type: DirectoryOrCreate
+        - name: config
+          hostPath:
+            path: /mnt/data-disk/services/btsync/config
+            type: DirectoryOrCreate
+        - name: download
+          hostPath:
+            path: /mnt/data-disk/services/btsync/data
+            type: DirectoryOrCreate
+        - name: alpha-conf
+          configMap:
+            name: {{ include "btsync.fullname" . }}

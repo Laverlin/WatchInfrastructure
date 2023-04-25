@@ -1,0 +1,46 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "btsync.fullname" . }}-web
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`{{ include "domainNamePrefix" . }}ivan-b.com`)
+      kind: Rule
+      services:
+        - name: {{ include "btsync.fullname" . }}
+          port: {{ .Values.service.oauthPort }}
+  tls: {}
+
+---
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: {{ include "btsync.fullname" . }}-trtcp
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - sync-tcp
+  routes:
+    - match: Host(`{{ include "domainNamePrefix" . }}ivan-b.com`)
+      kind: Rule
+      services:
+        - name: {{ include "btsync.fullname" . }}
+          port: {{ .Values.service.transferPort }}
+---
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRouteUDP
+metadata:
+  name: {{ include "btsync.fullname" . }}-trudp
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - sync-udp
+  routes:
+    - services:
+        - name: {{ include "btsync.fullname" . }}
+          port: {{ .Values.service.transferPort }}

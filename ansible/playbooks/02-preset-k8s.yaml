@@ -122,10 +122,11 @@
     - name: Installing Kubernetes Cluster Packages.
       ansible.builtin.apt: 
         name:
-          - kubeadm
-          - kubectl
-          - kubelet
+          - kubeadm #=1.26.4-00
+          - kubectl #=1.26.4-00
+          - kubelet #=1.26.4-00
         state: present
+        allow_downgrade: true
 
     - name: Enable service kubelet, and enable persistently
       ansible.builtin.service: 

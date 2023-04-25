@@ -11,10 +11,10 @@ fullnameOverride: "pg-server"
 
 pgSecret: "postgres"
 
-resources:
-  limits:
-    memory: 500Mi
-    hugepages-2Mi: 500Mi
+resources: {}
+  # limits:
+  #   memory: 500Mi
+  #   hugepages-2Mi: 200Mi
 #   requests:
 #     cpu: ".2"
 #     memory: "100Mi"

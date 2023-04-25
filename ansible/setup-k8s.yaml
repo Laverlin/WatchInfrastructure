@@ -7,7 +7,7 @@
 - import_playbook: playbooks/03-node-primero.yaml
 
 - import_playbook: playbooks/04-remove-taint.yaml
-  when: secret_vars.deploy_env == 'dev'
+  #when: secret_vars.deploy_env == 'dev'
 
 - import_playbook: playbooks/05-node-segundo.yaml
   when: secret_vars.deploy_env != 'dev'

@@ -34,7 +34,10 @@
         - { helmName: 'wireguard', namespace: 'tools', isWait: false , deploy: 'prod' }
         - { helmName: 'promtail', namespace: 'monitoring', isWait: false }
 
+        - { helmName: 'btsync', namespace: 'tools', isWait: false }  
         - { helmName: 'home-assist', namespace: 'tools', isWait: false, deploy: 'dev' }
         - { helmName: 'qbt', namespace: 'tools', isWait: false, deploy: 'dev' }
         - { helmName: 'plex', namespace: 'tools', isWait: false, deploy: 'dev' }
+        - { helmName: 'photoprism', namespace: 'tools', isWait: false, deploy: 'dev' }
+        
       when: "'deploy' not in item or item.deploy == secret_vars.deploy_env"

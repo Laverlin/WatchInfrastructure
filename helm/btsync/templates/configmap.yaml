@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "btsync.fullname" . }}
+  labels:
+    {{- include "btsync.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+data:
+  allow-snippet-annotations: "false"
+  alpha-config.yaml: |
+    injectRequestHeaders:
+    - name: X-Forwarded-Groups
+      values:
+      - claim: groups
+    - name: X-Forwarded-User
+      values:
+      - claim: user
+    - name: X-Forwarded-Email
+      values:
+      - claim: email
+    - name: X-Forwarded-Preferred-Username
+      values:
+      - claim: preferred_username
+    - name: Authorization
+      values:
+      - value: QmFzaWMgYVdJNmMzUXhNamcyUDJ0YQ==
+    metricsServer:
+      BindAddress: ""
+      SecureBindAddress: ""
+      TLS: null
+    providers:
+    - ADFSConfig: {}
+      allowedGroups:
+      - {{ .Values.global.kcGroupBtsync }}
+      azureConfig:
+        tenant: common
+      bitbucketConfig: {}
+      clientID: {{ .Values.global.kcClientIdBtsync }} 
+      clientSecret: {{ .Values.global.kcClientSecretBtsync }}
+      githubConfig: {}
+      gitlabConfig: {}
+      googleConfig: {}
+      id: oidc=btsync
+      keycloakConfig: {}
+      loginGovConfig: {}
+      loginURLParameters:
+      - default:
+        - force
+        name: approval_prompt
+      oidcConfig:
+        audienceClaims:
+        - aud
+        emailClaim: email
+        groupsClaim: groups
+        insecureAllowUnverifiedEmail: true
+        insecureSkipNonce: true
+        issuerURL: {{ .Values.global.oidcIssuerUrl }}
+        userIDClaim: email
+      provider: oidc
+    server:
+      BindAddress: 0.0.0.0:{{ .Values.service.oauthPort }}
+      SecureBindAddress: ""
+      TLS: null
+    upstreamConfig:
+      upstreams:
+      - flushInterval: 1s
+        id: /
+        insecureSkipTLSVerify: true
+        passHostHeader: true
+        path: /
+        proxyWebSockets: true
+        timeout: 30s
+        uri: http://127.0.0.1:{{ .Values.service.containerPort }}/

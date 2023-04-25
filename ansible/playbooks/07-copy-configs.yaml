@@ -1,5 +1,5 @@
 - name: Copy config files
-  hosts: barolo
+  hosts: barolo, master
   become: true
   become_method: sudo
   become_user: root
