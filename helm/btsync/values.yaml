@@ -4,7 +4,9 @@
 
 image:
   repository: linuxserver/resilio-sync #resilio/sync
-  tag: ""
+  tag: "2.7.3"
+  oauthRepo: quay.io/oauth2-proxy/oauth2-proxy
+  oauthTag: "v7.4.0"
 
 nameOverride: ""
 fullnameOverride: ""
@@ -21,6 +23,7 @@ securityContext: {}
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
   # runAsUser: 1000
+  # runAsGroup: 1000
 
 service:
   type: ClusterIP

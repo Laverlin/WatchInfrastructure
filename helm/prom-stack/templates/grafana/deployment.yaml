@@ -23,7 +23,7 @@ spec:
       {{- end }}
       containers:
         - name: {{ .Values.grafana.name }}
-          image: grafana/grafana:latest
+          image: {{ .Values.grafana.repository }}:{{ .Values.grafana.tag }}
           ports:
             - containerPort: {{ .Values.grafana.containerPort }}
           env:

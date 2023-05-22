@@ -7,7 +7,7 @@ fullnameOverride: ""
 
 image:
   repository: traefik
-  tag: ""
+  tag: "2.10.1"
 
 isApiInsecure: true
 

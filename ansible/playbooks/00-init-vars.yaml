@@ -29,6 +29,7 @@
           kc_clientsecret_gf: "{{ secret_vars.dev_kc_clientsecret_gf }}"
           kc_clientsecret_wireguard: "{{ secret_vars.dev_kc_clientsecret_wireguard }}"
           kc_clientsecret_btsync: "{{ secret_vars.dev_kc_clientsecret_btsync }}"
+          storage_root: "{{ secret_vars.dev_storage_root }}"
       when: secret_vars.deploy_env == 'dev'
 
     - name: define STAGE variables
@@ -42,6 +43,7 @@
           kc_clientsecret_gf: "{{ secret_vars.stage_kc_clientsecret_gf }}"
           kc_clientsecret_wireguard: "{{ secret_vars.stage_kc_clientsecret_wireguard }}"
           kc_clientsecret_btsync: "{{ secret_vars.stage_kc_clientsecret_btsync }}"
+          storage_root: "{{ secret_vars.storage_root }}"
       when: secret_vars.deploy_env == 'stage'
 
     - name: define PROD variables
@@ -55,6 +57,7 @@
           kc_clientsecret_gf: "{{ secret_vars.prod_kc_clientsecret_gf }}"
           kc_clientsecret_wireguard: "{{ secret_vars.prod_kc_clientsecret_wireguard }}"
           kc_clientsecret_btsync: "{{ secret_vars.prod_kc_clientsecret_btsync }}"
+          storage_root: "{{ secret_vars.storage_root }}"
       when: secret_vars.deploy_env == 'prod'
 
     - name: define common vars

@@ -52,11 +52,11 @@
               oidc-username-prefix: 'oidc:'
               oidc-groups-claim: groups
               oidc-groups-prefix: 'oidc:'
-              oidc-ca-file: {{ secret_vars.storage_root }}/persist/ssl/{{ envs.domain_name }}.full
+              oidc-ca-file: {{ envs.storage_root }}/persist/ssl/{{ envs.domain_name }}.full
             extraVolumes:
               - name: "ssl-cert"
-                hostPath: "{{ secret_vars.storage_root }}/persist/ssl/"
-                mountPath: "{{ secret_vars.storage_root }}/persist/ssl/"
+                hostPath: "{{ envs.storage_root }}/persist/ssl/"
+                mountPath: "{{ envs.storage_root }}/persist/ssl/"
                 readOnly: true
                 pathType: DirectoryOrCreate
             certSANs:

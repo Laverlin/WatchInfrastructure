@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: {{ .Values.nodeExporter.name }}
-          image: "quay.io/prometheus/node-exporter:latest"
+          image: {{ .Values.nodeExporter.repository }}:{{ .Values.nodeExporter.tag }}
           args:
             - --path.procfs=/host/proc
             - --path.sysfs=/host/sys

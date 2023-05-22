@@ -17,6 +17,14 @@
         src: ./../../persist/wwwroot
         dest: "{{ secret_vars.storage_root }}/persist"
         force: yes # And we always want to have a fresh wwwwroot
+      when: secret_vars.deploy_env == 'prod' or secret_vars.deploy_env == 'stage'
+
+    - name: Copy wwwroot
+      ansible.builtin.copy:
+        src: ./../../persist/wwwroot
+        dest: "{{ secret_vars.dev_storage_root }}/persist"
+        force: yes # And we always want to have a fresh wwwwroot
+      when: secret_vars.deploy_env == 'dev'
 
     # - name: Copy grafana dashboards
     #   ansible.builtin.copy:

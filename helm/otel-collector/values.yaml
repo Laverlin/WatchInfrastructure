@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: otel/opentelemetry-collector
-  tag: "latest"
+  tag: "0.75.0"
 
 nameOverride: ""
 fullnameOverride: ""

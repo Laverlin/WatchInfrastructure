@@ -5,22 +5,30 @@ grafana:
   database:
     url: 'pg-server.database'
     port: '5432'
+  repository: grafana/grafana
+  tag: "9.4.3"
 
 kubeStateMetrics:
   name: 'kube-state-metrics'
   namespace: 'kube-system'
   servicePort: 8080
   telemetryServicePort: 8081
+  repository: registry.k8s.io/kube-state-metrics/kube-state-metrics
+  tag: "v2.5.0"
 
 nodeExporter:
   name: 'node-exporter'
   containerPort: 9100
   hostPort: 9100
+  repository: 'quay.io/prometheus/node-exporter'
+  tag: 'v1.5.0'
 
 prometheus:
   name: 'prometheus'
   containerPort: 9090
   nodePort: 30909
+  repository: 'prom/prometheus'
+  tag: 'v2.43.0'
 
   configPath: /etc/config/prometheus.yml
 

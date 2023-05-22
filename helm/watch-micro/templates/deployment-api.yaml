@@ -44,6 +44,8 @@ spec:
               value: {{ .Values.lokiUrl }}
             - name: ApiConfiguration__OpenTelemetryCollectorUrl
               value: {{ include "otelUrlWithHttp" . }}
+            - name: ApiConfiguration__RefreshInterval
+              value: "21"
             - name: KafkaConfiguration__BootstrapServers
               value: {{ .Values.kafkaServer }}
             - name: PgProviderConfiguration__server

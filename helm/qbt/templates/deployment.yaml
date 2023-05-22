@@ -39,7 +39,7 @@ spec:
             - name: QBT_DOWNLOADS_PATH
               value: "/downloads"
             - name: PUID
-              value: "1010" #"{{ .Values.securityContext.runAsUser }}"
+              value: "1000" #"{{ .Values.securityContext.runAsUser }}"
             - name: PGID
               value: "100" #"{{ .Values.podSecurityContext.runAsGroup }}"
 

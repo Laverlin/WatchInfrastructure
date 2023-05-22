@@ -10,7 +10,7 @@
             deployEnv: {{ secret_vars.deploy_env }}
             podSubnet: {{ secret_vars.pod_subnet }}
             publicIp: {{ public_ip }}
-            storageRoot: {{ secret_vars.storage_root }}
+            storageRoot: {{ envs.storage_root }}
             clusterSecretStoreName: {{ secret_vars.cluster_secret_store_name }}
             tlsStoreName: {{ secret_vars.tls_store_name }}
             domainName: {{ envs.domain_name }}

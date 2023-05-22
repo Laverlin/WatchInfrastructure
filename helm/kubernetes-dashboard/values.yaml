@@ -4,6 +4,12 @@
 
 replicaCount: 1
 
+image:
+  repository: kubernetesui/dashboard
+  tag: "v2.7.0"
+  oauthRepo: quay.io/oauth2-proxy/oauth2-proxy
+  oauthTag: "v7.4.0"
+
 nameOverride: ""
 fullnameOverride: ""
 

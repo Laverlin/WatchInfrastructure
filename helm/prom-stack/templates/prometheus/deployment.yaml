@@ -18,7 +18,7 @@ spec:
 
       containers:
         - name: {{ .Values.prometheus.name }}
-          image: prom/prometheus:latest
+          image: {{ .Values.prometheus.repository }}:{{ .Values.prometheus.tag }}
           ports:
             - containerPort: {{ .Values.prometheus.containerPort }}
           imagePullPolicy: 'IfNotPresent'

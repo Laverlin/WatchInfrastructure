@@ -4,7 +4,7 @@
 
 image:
   repository: hotio/qbittorrent #lscr.io/linuxserver/qbittorrent #qbittorrentofficial/qbittorrent-nox
-  tag: "latest"
+  tag: "release-4.5.2"
 
 nameOverride: ""
 fullnameOverride: ""

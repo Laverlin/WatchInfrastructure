@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: quay.io/keycloak/keycloak
-  tag: "latest"
+  tag: "21.1"
 
 nameOverride: ""
 fullnameOverride: ""

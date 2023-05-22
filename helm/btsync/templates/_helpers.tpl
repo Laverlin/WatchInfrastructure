@@ -53,7 +53,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- define "domainNamePrefix" -}}
 {{- if eq .Values.global.deployEnv "dev" -}}
 sync-nuc.
-{{- else }}
+{{- else -}}
 sync.
 {{- end }}
 {{- end }}

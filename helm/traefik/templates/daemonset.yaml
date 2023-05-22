@@ -24,7 +24,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: {{ .Chart.Name }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default "latest" }}"
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           args:
             {{- if .Values.isApiInsecure }}
             - --api.insecure

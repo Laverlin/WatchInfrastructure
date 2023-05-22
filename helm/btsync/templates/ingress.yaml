@@ -13,7 +13,6 @@ spec:
         - name: {{ include "btsync.fullname" . }}
           port: {{ .Values.service.oauthPort }}
   tls: {}
-
 ---
 
 apiVersion: traefik.containo.us/v1alpha1

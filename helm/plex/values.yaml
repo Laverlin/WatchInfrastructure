@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: plexinc/pms-docker #lscr.io/linuxserver/plex
-  tag: "latest"
+  tag: "1.32.0.6973-a787c5a8e"
 
 nameOverride: ""
 fullnameOverride: ""
