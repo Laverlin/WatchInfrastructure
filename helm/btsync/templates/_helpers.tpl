@@ -57,3 +57,11 @@ sync-nuc.
 sync.
 {{- end }}
 {{- end }}
+
+{{- define "storagePath" -}}
+{{- if eq .Values.global.deployEnv "dev" -}}
+/mnt/data-disk/services/btsync
+{{- else -}}
+/shared-data/persist/btsync
+{{- end }}
+{{- end }}
