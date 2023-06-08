@@ -51,6 +51,7 @@
             wsCurrencyConverterKey: '{{ secret_vars.ws_currency_converter_key }}'
             wsTwelveDataKey: '{{ secret_vars.ws_twelve_data_key }}'
             appInsightsKey: '{{ secret_vars.app_insights_key }}'
+            wsAppleDarkSkyKey: '{{ secret_vars.ws_apple_darksky_key }}'
 
             vpnIpsecPsk: '{{ secret_vars.vpn_pre_shared_key }}'
             vpnUser: '{{ secret_vars.vpn_username }}'

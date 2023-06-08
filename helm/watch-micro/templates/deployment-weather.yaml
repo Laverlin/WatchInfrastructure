@@ -28,6 +28,11 @@ spec:
               value: {{ .Values.kafkaServer }}
             - name: AppConfiguration__handler 
               value: WeatherInfo
+            - name: WeatherConfiguration__AppleDarkSkyKey
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "watch-micro.fullname" (list . "") }}
+                  key: wsAppleDarkSkyKey
             - name: WeatherConfiguration__OpenWeatherKey
               valueFrom:
                 secretKeyRef:
