@@ -17,6 +17,7 @@ spec:
       labels:
         {{- include "home-assist.selectorLabels" . | nindent 8 }}
     spec:
+      hostNetwork: true
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
