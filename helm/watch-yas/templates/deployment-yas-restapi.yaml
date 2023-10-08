@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "watch-yas.fullname" . }}-restapi
+  labels:
+    {{- include "watch-yas-restapi.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.yasRestapi.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "watch-yas-restapi.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        wb.io/export_logs: "true"
+      labels:
+        {{- include "watch-yas-restapi.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+
+        - name: nginx
+          image: nginx:alpine
+          ports: 
+            - containerPort: {{ .Values.yasRestapi.nginxPort }}
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d
+            - name: nginx-log
+              mountPath: /var/log/nginx
+            - name: nginx-static
+              mountPath: /var/www/html
+          resources:
+            requests:
+              memory: "20Mi"
+
+        - name: {{ include "watch-yas.fullname" . }}-restapi
+          image: {{ .Values.yasRestapi.image.repository }}:{{ .Values.yasRestapi.image.tag | default "latest" }}
+          ports:
+            - containerPort: {{ .Values.yasRestapi.restapiPort }}
+          env:
+            - name: YASR_logLevel
+              value: {{ if eq .Values.global.deployEnv "prod" -}}"2"{{ else }}"-1"{{- end }}
+            - name: YASR_listener_port
+              value: {{ .Values.yasRestapi.restapiPort | quote }}
+            - name: YASR_otelEndpoint
+              value: {{ include "otelUrl" . }}
+            - name: YASR_kafka_broker
+              value: {{ .Values.kafka.broker }}
+            - name: YASR_kafka_topicName
+              value: {{ .Values.kafka.topic }}
+            - name: YASR_pgUrl
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "watch-yas.fullname" . }}
+                  key: pgUrl
+            - name: GIN_MODE
+              value: "release"
+
+          resources:
+            {{- toYaml .Values.yasRestapi.resources | nindent 12 }}
+
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: {{ include "watch-yas.fullname" . }}-nginx
+        - name: nginx-log
+          hostPath:
+            path: {{ .Values.global.storageRoot }}/persist/nginx-yas-restapi/log
+            type: DirectoryOrCreate
+        - name: nginx-static
+          hostPath:
+            path: {{ .Values.global.storageRoot }}/persist/wwwroot-yas
+            type: DirectoryOrCreate

@@ -5,10 +5,10 @@
 replicaCount: 1
 
 image:
-  repository: neilpang/acme.sh
+  repository: ilaverlin/k8s-acme  #neilpang/acme.sh
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "3.0.5"
+  tag: "1.0.9" #"latest" #"3.0.5"
 
 nameOverride: ""
 fullnameOverride: ""

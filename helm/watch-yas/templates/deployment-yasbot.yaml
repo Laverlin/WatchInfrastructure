@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "watch-micro.fullname" (list . .Values.yasBot.nameSuffix) }}
+  name: {{ include "watch-yas.fullname" . }}-bot
   labels:
-    {{- include "watch-micro.labels" (list . .Values.yasBot.nameSuffix) | nindent 4 }}
+    {{- include "watch-yas-bot.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.yasBot.replicaCount }}
   selector:
     matchLabels:
-      {{- include "watch-micro.selectorLabels" (list . .Values.yasBot.nameSuffix) | nindent 6 }}
+      {{- include "watch-yas-bot.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "watch-micro.selectorLabels" (list . .Values.yasBot.nameSuffix) | nindent 8 }}
+        {{- include "watch-yas-bot.selectorLabels" . | nindent 8 }}
     spec:
       containers:
-        - name: {{ include "watch-micro.fullname" (list . .Values.yasBot.nameSuffix) }}
-          image: {{ .Values.yasBot.imageRepo }}:{{ .Values.yasBot.imageTag | default "latest" }}
+        - name: {{ include "watch-yas.fullname" . }}-bot
+          image: {{ .Values.yasBot.image.repository }}:{{ .Values.yasBot.image.tag | default "latest" }}
           env:
             - name: "DOTNET_HOSTBUILDER__RELOADCONFIGONCHANGE"
               value: "false"
@@ -25,16 +25,17 @@ spec:
             - name: BotConfiguration__OpenTelemetryCollectorUrl
               value: {{ include "otelUrlWithHttp" . }}
             - name: BotConfiguration__BaseReaderApiUrl
-              value: http://{{ include "watch-micro.fullname" (list . .Values.reader.nameSuffix) }}:{{ .Values.reader.ports.service }}
-            - name: BotConfiguration__BaseStorageApiUrl
-              value: http://{{ include "watch-micro.fullname" (list . .Values.api.nameSuffix) }}:{{ .Values.api.ports.service }}/api/v2.0/YASail/
+              value: http://{{ include "watch-yas.fullname" . }}-restapi:{{ .Values.yasRestapi.nginxPort }}/yas-api/
+
             - name: BotConfiguration__BotApiKey
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "watch-micro.fullname" (list . "") }}
+                  name: {{ include "watch-yas.fullname" . }}
                   key: telegramBotApiToken
             - name: KafkaConfiguration__BootstrapServers
-              value: {{ .Values.kafkaServer }}
+              value: {{ .Values.kafka.broker }}
+            - name: KafkaConfiguration__Topic
+              value: {{ .Values.kafka.topic }}
           startupProbe:
             httpGet:
               path: /health/ready

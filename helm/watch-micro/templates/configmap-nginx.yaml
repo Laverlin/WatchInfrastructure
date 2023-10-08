@@ -22,6 +22,8 @@ data:
                 recursive_error_pages   on;
                 proxy_intercept_errors  on;
 
+                add_header Access-Control-Allow-Origin * always;
+
                 # error 404 handler
                 #
                 error_page 404 /error404.html;
@@ -41,7 +43,7 @@ data:
                         proxy_set_header        X-Real-IP $remote_addr;
                 }
 
-                # Legasy api for watch face app
+                # Legacy api for watch face app
                 #
                 location /garminapi/wf-service/ {
                         # rewrite ^/api/YAFace(.*) $1 break;

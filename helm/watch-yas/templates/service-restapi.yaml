@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "watch-yas.fullname" . }}-restapi
+  labels:
+    {{- include "watch-yas-restapi.labels" . | nindent 4 }}
+spec:
+  ports:
+    - port: {{ .Values.yasRestapi.servicePort }}
+      targetPort: {{ .Values.yasRestapi.nginxPort }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "watch-yas-restapi.selectorLabels" . | nindent 4 }}

@@ -1,0 +1,15 @@
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "watch-yas.fullname" . }}-yasapi
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: PathPrefix(`/yas-api/`) || PathPrefix(`/yas-bot/`)
+      kind: Rule
+      services:
+        - name: {{ include "watch-yas.fullname" . }}-restapi
+          port: {{ .Values.yasRestapi.servicePort }}
+  tls: {}

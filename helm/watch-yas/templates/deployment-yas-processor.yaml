@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "watch-yas.fullname" . }}-processor
+  labels:
+    {{- include "watch-yas-processor.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.yasProcessor.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "watch-yas-processor.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        wb.io/export_logs: "true"
+      labels:
+        {{- include "watch-yas-processor.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ include "watch-yas.fullname" . }}-processor
+          image: {{ .Values.yasProcessor.image.repository }}:{{ .Values.yasProcessor.image.tag | default "latest" }}
+          env:
+            - name: YASR_logLevel
+              value: {{ if eq .Values.global.deployEnv "prod" -}}"2"{{ else }}"-1"{{- end }}
+            - name: YASR_otelEndpoint
+              value: {{ include "otelUrl" . }}
+            - name: YASR_kafka_broker
+              value: {{ .Values.kafka.broker }}
+            - name: YASR_kafka_topicName
+              value: {{ .Values.kafka.topic }}
+            - name: YASR_pgUrl
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "watch-yas.fullname" . }}
+                  key: pgUrl
+
+
+          resources:
+            {{- toYaml .Values.yasProcessor.resources | nindent 12 }}

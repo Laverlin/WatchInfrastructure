@@ -30,6 +30,7 @@
         - { helmName: 'otel-collector', namespace: 'monitoring', isWait: false }
         - { helmName: 'watch-api-mono', namespace: 'watch-backend', isWait: false }
         - { helmName: 'watch-micro', namespace: 'watch-backend', isWait: false }
+        - { helmName: 'watch-yas', namespace: 'watch-yas', isWait: false }
         - { helmName: 'vpn-server', namespace: 'tools', isWait: false }
         - { helmName: 'wireguard', namespace: 'tools', isWait: false , deploy: 'prod' }
         - { helmName: 'promtail', namespace: 'monitoring', isWait: false }
