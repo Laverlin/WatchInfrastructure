@@ -7,7 +7,7 @@ replicaCount: 1
 image:
   repository: grafana/tempo
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "2.0.1"
+  tag: "2.2.4"
 
 nameOverride: ""
 fullnameOverride: ""

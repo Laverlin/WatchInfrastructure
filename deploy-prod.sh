@@ -5,7 +5,7 @@ sed -i -e '/deploy_env/s/stage/prod/g' terraform/secret.auto.tfvars
 
 . terraform/secret.auto.tfvars
 
-echo "Deploy k8s cluster on azure"
+echo "Deploy PROD k8s cluster on azure"
 cd terraform
 terraform workspace select prod
 terraform import azurerm_managed_disk.shared-data-disk $AZURE_DISK_PROD

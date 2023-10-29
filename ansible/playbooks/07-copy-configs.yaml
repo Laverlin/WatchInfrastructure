@@ -1,4 +1,4 @@
-- name: Copy config files
+- name: Copy config files & utils
   hosts: barolo, master
   become: true
   become_method: sudo
@@ -25,6 +25,24 @@
         dest: "{{ secret_vars.dev_storage_root }}/persist"
         force: yes # And we always want to have a fresh wwwwroot
       when: secret_vars.deploy_env == 'dev'
+
+    - name: Copy wwwroot-yas
+      ansible.builtin.copy:
+        src: ./../../persist/wwwroot-yas
+        dest: "{{ secret_vars.dev_storage_root }}/persist"
+        force: yes 
+
+    - name: Install unzip
+      ansible.builtin.apt:
+        name:
+          - unzip
+        state: present
+
+    - name: Copy bot deploy script
+      ansible.builtin.copy:
+        src: ./../../deploy-botapp.sh
+        dest: "/home/{{ ansible_user }}/deploy-botapp.sh"
+        force: yes 
 
     # - name: Copy grafana dashboards
     #   ansible.builtin.copy:

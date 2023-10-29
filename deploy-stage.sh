@@ -5,10 +5,12 @@ sed -i -e '/deploy_env/s/prod/stage/g' terraform/secret.auto.tfvars
 
 . terraform/secret.auto.tfvars
 
-echo "Deploy k8s cluster on azure"
+echo "Deploy stage k8s cluster on azure"
 cd terraform
 terraform workspace select stage
+
 terraform import azurerm_managed_disk.shared-data-disk $AZURE_DISK_STAGE
+
 terraform apply --auto-approve -compact-warnings
 
 read -t 60 -n 1 -p "Now we'll apply ansible scripts. Continue (Y/n)?" answer

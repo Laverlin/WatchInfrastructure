@@ -40,7 +40,7 @@ resource "azurerm_virtual_machine_data_disk_attachment" "data-disk-attachment" {
   virtual_machine_id = azurerm_linux_virtual_machine.vm.id
   lun                = "10"
   caching            = "None"
-  count              = azurerm_linux_virtual_machine.vm.name == "barolo" ? 1: 0
+  count              = var.shared_disk_count     //azurerm_linux_virtual_machine.vm.name == "barolo" ? 1 : 0
 }
 
 

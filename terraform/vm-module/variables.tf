@@ -9,3 +9,4 @@ variable "av_id" {}
 variable "shared_disk_id" {}
 variable "vm_ssh_port" {}
 variable "load_balancer" {}
+variable "shared_disk_count" {}

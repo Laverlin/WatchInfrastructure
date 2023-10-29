@@ -207,9 +207,9 @@ resource "azurerm_availability_set" "avset" {
 module "vm-module" {
   source           = "./vm-module"
   for_each = {
-    "barolo"      = {size = "Standard_B1ms", nic = azurerm_network_interface.nic[0], port  = 50022}
-    "barbaresco"  = {size = "Standard_B2s", nic = azurerm_network_interface.nic[1], port  = 50122}
-    "sfursat"     = {size = "Standard_B2s", nic = azurerm_network_interface.nic[2], port  = 50222}
+    "barolo"      = {size = "Standard_D2as_v5", nic = azurerm_network_interface.nic[0], port  = 50022, count = 1}
+    "barbaresco"  = {size = "Standard_B2s", nic = azurerm_network_interface.nic[1], port  = 50122, count = 0}
+    "sfursat"     = {size = "Standard_B2s", nic = azurerm_network_interface.nic[2], port  = 50222, count = 0}
   }
   vm_name                 = "${each.key}"
   rg_name                 = azurerm_resource_group.rg.name
@@ -222,6 +222,7 @@ module "vm-module" {
   av_id                   = azurerm_availability_set.avset.id
   vm_ssh_port             = each.value.port
   load_balancer           = azurerm_lb.lb
+  shared_disk_count       = each.value.count
 }
 
 
