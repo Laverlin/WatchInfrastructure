@@ -5,8 +5,8 @@
 replicaCount: 1
 
 image:
-  repository: otel/opentelemetry-collector
-  tag: "0.75.0"
+  repository: otel/opentelemetry-collector-contrib
+  tag: "0.97.0"
 
 nameOverride: ""
 fullnameOverride: ""
@@ -16,6 +16,7 @@ ports:
   zipkinReceiver: 9411
   grpcReceiver: 4317
   grpcReceiverNodePort: 30431
+  otelHttpPort: 4318
 
 tempo:
   server: tempo.monitoring

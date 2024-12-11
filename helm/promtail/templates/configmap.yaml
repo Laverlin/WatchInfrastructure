@@ -79,3 +79,77 @@ data:
             - __meta_kubernetes_pod_uid
             - __meta_kubernetes_pod_container_name
           target_label: __path__
+
+    - job_name: isa-pod-logs
+      kubernetes_sd_configs:
+        - role: pod
+      pipeline_stages:
+        - cri: {}
+
+        - json:
+            expressions:
+              timestamp: Timestamp
+              level: LogLevel
+              category: Category
+              event-id: EventId
+              message: Message
+              State:  
+
+        - json:
+            expressions:
+              Application: '"service.name"'
+              environment: '"deployment.environment"'
+              version: '"service.version"'
+            source: State
+
+        - labels:
+            timestamp:
+            category:
+            eventid:
+            message:
+            Application: 
+            environment:
+            version:
+            level:
+
+        - timestamp:
+            source: timestamp
+            format: RFC3339
+
+      relabel_configs:
+                                                        # annotations:
+                                                        #  isa.io/export_logs
+        - source_labels: [__meta_kubernetes_pod_annotation_isa_io_export_logs]
+          action: keep
+          regex: true
+        - source_labels:
+            - __meta_kubernetes_pod_node_name
+          target_label: __host__
+
+        - action: labelmap
+          regex: __meta_kubernetes_pod_label_(.+)
+        - action: replace
+          replacement: $1
+          separator: /
+          source_labels:
+            - __meta_kubernetes_namespace
+            - __meta_kubernetes_pod_name
+          target_label: job
+        - action: replace
+          source_labels:
+            - __meta_kubernetes_namespace
+          target_label: namespace
+        - action: replace
+          source_labels:
+            - __meta_kubernetes_pod_name
+          target_label: pod
+        - action: replace
+          source_labels:
+            - __meta_kubernetes_pod_container_name
+          target_label: container
+        - replacement: /var/log/pods/*$1/*.log
+          separator: /
+          source_labels:
+            - __meta_kubernetes_pod_uid
+            - __meta_kubernetes_pod_container_name
+          target_label: __path__ 

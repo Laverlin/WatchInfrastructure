@@ -4,7 +4,7 @@ metadata:
   name: {{ include "acme-sh.fullname" . }}-job
   namespace: {{ .Release.Namespace }}
   annotations:
-    "helm.sh/hook": post-install
+    "helm.sh/hook": post-install, post-upgrade
     "helm.sh/hook-weight": "0"
     "helm.sh/hook-delete-policy": hook-succeeded
   labels:
@@ -27,7 +27,10 @@ spec:
             kubectl exec deploy/acme-sh -n {{ .Release.Namespace }} -- /bin/ash -c 'curl -o /kubectl -LO https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl';
             kubectl exec deploy/acme-sh -n {{ .Release.Namespace }} -- /bin/ash -c 'chmod +x /kubectl && mv /kubectl /usr/local/bin/kubectl';
             kubectl exec deploy/acme-sh -n {{ .Release.Namespace }} -- --set-notify --notify-hook telegram;
-            kubectl exec deploy/acme-sh -n {{ .Release.Namespace }} -- --issue -d {{ .Values.global.domainName }} -d *.{{ .Values.global.domainName }} {{ if eq .Values.global.deployEnv "dev" -}} -d *.{{ .Values.global.NamecomDomain }} {{- end }}\
+            kubectl exec deploy/acme-sh -n {{ .Release.Namespace }} -- --issue \ 
+              -d {{ .Values.global.domainName }} -d *.{{ .Values.global.domainName }} \
+              -d {{ .Values.global.isplitDomain }} -d *.{{ .Values.global.prod_iSplitDomain }} \
+              {{ if eq .Values.global.deployEnv "dev" -}} -d *.{{ .Values.global.NamecomDomain }} {{- end }}\
               --force \
               --dns dns_namecom \
               {{ if eq .Values.global.deployEnv "stage" -}}--staging \{{ else }}--server letsencrypt.org \{{- end }}

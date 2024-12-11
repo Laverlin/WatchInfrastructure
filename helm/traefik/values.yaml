@@ -7,7 +7,7 @@ fullnameOverride: ""
 
 image:
   repository: traefik
-  tag: "2.10.1"
+  tag: ""
 
 isApiInsecure: true
 
@@ -15,7 +15,7 @@ log:
   enableLog: true
   logPath: "/logs/debug.log"
   logLevel: "DEBUG"
-  enableAccessLog: false
+  enableAccessLog: true
   accessLogPath: "" # no path => console 
 
 enableForwardedHeaders: false
@@ -30,6 +30,7 @@ ports:
   websecure:
     name: 'websecure'
     hostPort: 443
+  
 
 resources: {}
   # requests:

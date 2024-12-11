@@ -20,6 +20,7 @@
       loop:
         - { helmName: 'acme-sh', namespace: 'ingress', isWait: true }
         - { helmName: 'traefik', namespace: 'ingress', isWait: false }
+        - { helmName: 'minio', namespace: 'database', isWait: false }
         - { helmName: 'postgres', namespace: 'database', isWait: false }
         - { helmName: 'kafka', namespace: 'database', isWait: false }
         - { helmName: 'keycloak', namespace: 'monitoring', isWait: false }
@@ -40,5 +41,8 @@
         - { helmName: 'qbt', namespace: 'tools', isWait: false, deploy: 'dev' }
         - { helmName: 'plex', namespace: 'tools', isWait: false, deploy: 'dev' }
         - { helmName: 'photoprism', namespace: 'tools', isWait: false, deploy: 'dev' }
+        - { helmName: 'isplitapp', namespace: 'isplitapp', isWait: false }
+        - { helmName: 'sponsor-block', namespace: 'tools', isWait: false, deploy: 'dev' }
+        - { helmName: 'x3-ui', namespace: 'tools', isWait: false }
         
       when: "'deploy' not in item or item.deploy == secret_vars.deploy_env"

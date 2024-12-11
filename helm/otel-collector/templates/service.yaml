@@ -27,3 +27,7 @@ spec:
       protocol: TCP
       name: zipkin
 
+    - port: {{ .Values.ports.otelHttpPort }}
+      protocol: TCP
+      name: otel-http
+

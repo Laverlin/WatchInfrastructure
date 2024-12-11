@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "x3-ui.fullname" . }}
+  labels:
+    {{- include "x3-ui.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.vpnPort }}
+      targetPort: {{ .Values.service.vpnPort }}
+      protocol: TCP
+      name: vpn-tcp
+
+    - port: {{ .Values.service.vpnPort }}
+      targetPort: {{ .Values.service.vpnPort }}
+      protocol: UDP
+      name: vpn-udp
+
+    - port: {{ .Values.service.httpvpnPort }}
+      targetPort: {{ .Values.service.httpvpnPort }}
+      protocol: TCP
+      name: httpvpn
+
+    - port: {{ .Values.service.webPort }}
+      targetPort: {{ .Values.service.webPort }}
+      protocol: TCP
+      name: web
+
+
+
+  selector:
+    {{- include "x3-ui.selectorLabels" . | nindent 4 }}

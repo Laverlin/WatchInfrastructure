@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "minio.fullname" . }}
+  labels:
+    {{- include "minio.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "minio.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "minio.labels" . | nindent 8 }}
+	{{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+
+            - name: MINIO_BROWSER_REDIRECT_URL
+              value: https://{{ .Values.global.domainName }}{{ .Values.console.dashboardPath }}/
+            
+            - name: MINIO_IDENTITY_OPENID_REDIRECT_URI
+              value: https://{{ .Values.global.domainName }}{{ .Values.console.dashboardPath }}/oauth_callback
+
+            - name: MINIO_IDENTITY_OPENID_CONFIG_URL
+              value: {{ .Values.global.oidcIssuerUrl }}/.well-known/openid-configuration
+            - name: MINIO_IDENTITY_OPENID_DISPLAY_NAME
+              value: "SSO Login"
+            - name: MINIO_SERVER_URL
+              value: https://s3.{{ .Values.global.domainName }}/
+            - name: MINIO_REGION_NAME
+              value: "eu-amsterdam"
+            - name: MINIO_IDENTITY_OPENID_SCOPES
+              value: "openid,groups,profile,email,minio-auth"
+            # - name: MINIO_IDENTITY_OPENID_REDIRECT_URI_DYNAMIC
+            #   value: "on"
+            - name: MINIO_IDENTITY_OPENID_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "minio.fullname" . }}
+                  key: clientId 
+            - name: MINIO_IDENTITY_OPENID_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "minio.fullname" . }}
+                  key: clientSecret 
+
+            - name: MINIO_ROOT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "minio.fullname" . }}
+                  key: clientSecret 
+            - name: MINIO_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "minio.fullname" . }}
+                  key: clientSecret
+
+          command:
+            - /bin/bash
+            - -c
+          args: 
+            - minio server /data --console-address :{{ .Values.console.port }}
+          ports:
+            - name: console
+              containerPort: {{ .Values.console.port }}
+              protocol: TCP
+            - name: api
+              containerPort: {{ .Values.api.port }}
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: localvolume
+              mountPath: /data
+      volumes:
+        - name: localvolume
+          hostPath: 
+            path: {{ include "minio.localStorage" . }}
+            type: DirectoryOrCreate
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

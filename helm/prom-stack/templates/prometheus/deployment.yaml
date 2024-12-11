@@ -26,6 +26,7 @@ spec:
             - --config.file={{ .Values.prometheus.configPath }}
             - --web.console.libraries=/etc/prometheus/console_libraries
             - --web.console.templates=/etc/prometheus/consoles
+            - --storage.tsdb.retention.time=5d
           volumeMounts:
             - mountPath: /etc/config
               name: prom-config

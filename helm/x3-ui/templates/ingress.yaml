@@ -1,0 +1,102 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: stripprefix-x3-ui
+  namespace: {{ .Release.Namespace }}
+spec:
+  stripPrefix:
+    prefixes:
+      - {{ .Values.service.dashboardPath }}
+---
+
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: replacepath-x3-ui
+  namespace: {{ .Release.Namespace }}
+spec:
+  replacePath:
+    path: /panel
+---
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "x3-ui.fullname" . }}-web
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    # - match: Host(`x3p.{{ .Values.global.domainName }}`)
+    #   kind: Rule
+    - match: Host(`{{ .Values.global.domainName }}`) && PathPrefix(`{{ .Values.service.dashboardPath }}/`)
+      kind: Rule
+
+      # middlewares:
+      #   - name: stripprefix-x3-ui
+
+      services:
+        - name: {{ include "x3-ui.fullname" . }}
+          port: {{ .Values.service.webPort }}
+  tls: {}
+
+---
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "x3-ui.fullname" . }}-httpvpn
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    # - match: Host(`x3p.{{ .Values.global.domainName }}`)
+    #   kind: Rule
+    - match: Host(`{{ .Values.global.domainName }}`) && PathPrefix(`/secure`)
+      kind: Rule
+
+      # middlewares:
+      #   - name: stripprefix-x3-ui
+
+      services:
+        - name: {{ include "x3-ui.fullname" . }}
+          port: {{ .Values.service.httpvpnPort }}
+  tls: {}
+
+---
+
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteTCP
+metadata:
+  name: {{ include "x3-ui.fullname" . }}-tcpvpn
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - vpntcp
+  routes:
+    - match: HostSNI(`*`)
+      kind: Rule
+      services:
+        - name: {{ include "x3-ui.fullname" . }}
+          port: {{ .Values.service.vpnPort }}
+
+---
+
+
+apiVersion: traefik.io/v1alpha1
+kind: IngressRouteUDP
+metadata:
+  name: {{ include "x3-ui.fullname" . }}-udpvpn
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - vpn-udp
+  routes:
+    - match: HostSNI(`*`)
+      kind: Rule
+      services:
+        - name: {{ include "x3-ui.fullname" . }}
+          port: {{ .Values.service.vpnPort }}

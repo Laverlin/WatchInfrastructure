@@ -1,0 +1,18 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "isplitapp.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`isplit.app`) || Host(`api.isplit.app`) || Host(`dev.isplit.app`) || Host(`apidev.isplit.app`)
+      kind: Rule
+      services:
+        - name: {{ include "isplitapp.fullname" . }}
+          port: {{ .Values.service.nginxPort }}
+  tls: {}
+
+
+

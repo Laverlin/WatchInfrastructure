@@ -13,9 +13,18 @@ data:
     # https://github.com/open-telemetry/opentelemetry-collector-contrib/tree/main/receiver
     receivers:
       zipkin:
-        endpoint: "0.0.0.0:{{ .Values.ports.zipkinReceiver }}"
+        endpoint: "localhost:{{ .Values.ports.zipkinReceiver }}"
       otlp:
         protocols:
+          http:
+            endpoint: 0.0.0.0:{{ .Values.ports.otelHttpPort }}
+            cors:
+              allowed_origins:
+                - http://localhost:5173
+                - https://{{ .Values.global.isplitDomain }}
+                - https://{{ .Values.global.isplitApiDomain }}
+              allowed_headers: ["*"]
+              max_age: 7200            
           grpc:
 
     # Configure exporters
@@ -25,7 +34,15 @@ data:
         endpoint: "0.0.0.0:{{ .Values.ports.prometheusExporter }}"
 
       # log to the console
-      logging:
+      debug:
+
+      loki:
+        endpoint: http://loki:3100/loki/api/v1/push
+        tls:
+          insecure: true
+        default_labels_enabled:
+          exporter: false
+          job: true
 
       # Export to a file
       file:
@@ -42,6 +59,12 @@ data:
     processors:
       batch:
 
+      resource:
+        attributes:
+        - action: insert
+          key: loki.resource.labels
+          value: os.type, service.version
+
     # Configure pipelines. Pipeline defines a path the data follows in the Collector
     # starting from reception, then further processing or modification and finally
     # exiting the Collector via exporters.
@@ -52,12 +75,12 @@ data:
         traces:
           receivers: [otlp, zipkin]
           processors: [batch]
-          exporters: [logging, otlp]
+          exporters: [otlp]
         metrics:
           receivers: [otlp]
           processors: [batch]
-          exporters: [logging, prometheus]
+          exporters: [prometheus]
         logs:
           receivers: [otlp]
-          processors: []
-          exporters: [logging]
+          processors: [resource]
+          exporters: [loki]

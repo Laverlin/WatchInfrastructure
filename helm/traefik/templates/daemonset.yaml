@@ -42,6 +42,7 @@ spec:
 
             - --entrypoints.web.Address=:{{ .Values.ports.web.hostPort }}
             - --entrypoints.websecure.Address=:{{ .Values.ports.websecure.hostPort }}
+            #- --entryPoints.websecure.reusePort=true
             - --entrypoints.web.http.redirections.entryPoint.to=websecure
             - --entrypoints.web.http.redirections.entryPoint.scheme=https
             - --entrypoints.web.http.redirections.entrypoint.permanent=true
@@ -54,6 +55,12 @@ spec:
             - --entryPoints.sync-tcp.address=:55555
             - --entryPoints.sync-udp.address=:55555/udp
             {{- end }}
+
+            - --entryPoints.vpntcp.Address=:8443
+            - --entryPoints.vpn-udp.Address=:8443/udp
+            # - --entryPoints.vpn2-tcp.Address=:4443
+            # - --entryPoints.vpn2-udp.Address=:4443/udp
+            #- --entryPoints.vpn.reusePort=true
 
             - --providers.kubernetescrd=true
             - --providers.kubernetesingress=true
@@ -93,6 +100,9 @@ spec:
             - name: "qbt"
               containerPort: {{ .Values.global.qbtPort }}
               hostPort: {{ .Values.global.qbtPort }}
+            - name: "vpn"
+              containerPort: 8443
+              hostPort: 8443
 
           volumeMounts:
             - mountPath: /logs

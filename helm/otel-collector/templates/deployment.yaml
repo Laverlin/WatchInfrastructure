@@ -18,12 +18,14 @@ spec:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           command:
-            - "/otelcol"
+            - "/otelcol-contrib"
             - "--config=/etc/otel/config.yaml"
           ports:
             - containerPort: {{ .Values.ports.prometheusExporter }}
             - containerPort: {{ .Values.ports.zipkinReceiver }}
             - containerPort: {{ .Values.ports.grpcReceiver }}
+            - containerPort: {{ .Values.ports.otelHttpPort }}
+
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           resources:

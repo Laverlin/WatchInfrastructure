@@ -36,7 +36,16 @@ data:
 
     storage:
       trace:
-        backend: local                     # backend configuration to use
+        backend: s3
+        s3:
+          endpoint: minio.database:9000
+          region: ""
+          access_key: tempoUser
+          secret_key: tempoPwd
+          bucket: tempo
+          insecure: true
+          forcepathstyle: true
+
         block:
           bloom_filter_false_positive: .05 # bloom filter false positive rate.  lower values create larger filters but fewer false positives
 
@@ -44,8 +53,7 @@ data:
         wal:
           path: /tmp/tempo/wal             # where to store the the wal locally
           v2_encoding: snappy                 # wal encoding/compression.  options: none, gzip, lz4-64k, lz4-256k, lz4-1M, lz4, snappy, zstd, s2
-        local:
-          path: /tmp/tempo/blocks
+
         pool:
           max_workers: 100                 # worker pool determines the number of parallel requests to the object store backend
           queue_depth: 10000

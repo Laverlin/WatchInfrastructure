@@ -22,6 +22,8 @@
       set_fact:
         envs:
           domain_name: "{{ secret_vars.dev_namecom_fqn }}"
+          isplit_domain: "{{ secret_vars.dev_isplit_fqn }}"
+          isplit_api_domain: "{{ secret_vars.dev_api_isplit_fqn }}"
           postgres_user: "{{ secret_vars.dev_postgress_user }}"
           postgres_password: "{{ secret_vars.dev_postgress_password }}"
           telegram_bot_api_token: "{{ secret_vars.dev_telegram_bot_api_token }}"
@@ -29,6 +31,7 @@
           kc_clientsecret_gf: "{{ secret_vars.dev_kc_clientsecret_gf }}"
           kc_clientsecret_wireguard: "{{ secret_vars.dev_kc_clientsecret_wireguard }}"
           kc_clientsecret_btsync: "{{ secret_vars.dev_kc_clientsecret_btsync }}"
+          kc_clientsecret_minio: "{{ secret_vars.dev_kc_clientsecret_minio }}"
           storage_root: "{{ secret_vars.dev_storage_root }}"
       when: secret_vars.deploy_env == 'dev'
 
@@ -36,6 +39,8 @@
       set_fact: 
         envs:
           domain_name: "{{ secret_vars.stage_namecom_fqn }}"
+          isplit_domain: "{{ secret_vars.stage_isplit_fqn }}"
+          isplit_api_domain: "{{ secret_vars.stage_api_isplit_fqn }}"
           postgres_user: "{{ secret_vars.stage_postgress_user }}"
           postgres_password: "{{ secret_vars.stage_postgress_password }}"
           telegram_bot_api_token: "{{ secret_vars.stage_telegram_bot_api_token }}"
@@ -43,6 +48,7 @@
           kc_clientsecret_gf: "{{ secret_vars.stage_kc_clientsecret_gf }}"
           kc_clientsecret_wireguard: "{{ secret_vars.stage_kc_clientsecret_wireguard }}"
           kc_clientsecret_btsync: "{{ secret_vars.stage_kc_clientsecret_btsync }}"
+          kc_clientsecret_minio: "{{ secret_vars.stage_kc_clientsecret_minio }}"
           storage_root: "{{ secret_vars.storage_root }}"
       when: secret_vars.deploy_env == 'stage'
 
@@ -50,6 +56,8 @@
       set_fact:
         envs:
           domain_name: "{{ secret_vars.prod_namecom_fqn }}"
+          isplit_domain: "{{ secret_vars.prod_isplit_fqn }}"
+          isplit_api_domain: "{{ secret_vars.prod_api_isplit_fqn }}"
           postgres_user: "{{ secret_vars.prod_postgress_user }}"
           postgres_password: "{{ secret_vars.prod_postgress_password }}"
           telegram_bot_api_token: "{{ secret_vars.prod_telegram_bot_api_token }}"
@@ -57,6 +65,7 @@
           kc_clientsecret_gf: "{{ secret_vars.prod_kc_clientsecret_gf }}"
           kc_clientsecret_wireguard: "{{ secret_vars.prod_kc_clientsecret_wireguard }}"
           kc_clientsecret_btsync: "{{ secret_vars.prod_kc_clientsecret_btsync }}"
+          kc_clientsecret_minio: "{{ secret_vars.prod_kc_clientsecret_minio }}"
           storage_root: "{{ secret_vars.storage_root }}"
       when: secret_vars.deploy_env == 'prod'
 

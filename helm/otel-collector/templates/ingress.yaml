@@ -1,0 +1,15 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "otel-collector.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`otel.isplit.app`) || Host(`oteldev.isplit.app`)
+      kind: Rule
+      services:
+        - name: {{ include "otel-collector.fullname" . }}
+          port: {{ .Values.ports.otelHttpPort }}
+  tls: {}

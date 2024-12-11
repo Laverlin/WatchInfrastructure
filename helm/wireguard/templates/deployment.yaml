@@ -115,6 +115,4 @@ spec:
           hostPath:
             path: {{ .Values.global.storageRoot }}/persist/wireguard
             type: DirectoryOrCreate
-          
-
 
