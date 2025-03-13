@@ -17,6 +17,7 @@
             prod_iSplitDomain: {{ secret_vars.prod_isplit_fqn }} 
             isplitDomain: {{ envs.isplit_domain }}
             isplitApiDomain: {{ envs.isplit_api_domain }}
+            isplitOtelDomain: {{ envs.isplit_otel_domain }}
             oidcIssuerUrl: {{ common.oidc_issuer_url }}
             keycloakHostname: {{ secret_vars.keycloak_subdomain }}{{ envs.domain_name }}
             azStorageAccount: {{ secret_vars.azure_storage_account }}
@@ -33,6 +34,12 @@
             vapidSubject: '{{ secret_vars.vapid_subject }}'
             vapidPublicKey: '{{ secret_vars.vapid_public_key }}'
             vapidPrivateKey: '{{ secret_vars.vapid_private_key }}'
+
+            fbkeyPrivateKeyId: '{{ secret_vars.fbkey_private_key_id }}'
+            fbkeyPrivateKey: '{{ secret_vars.fbkey_private_key }}'
+            fbkeyClientEmail: '{{ secret_vars.fbkey_client_email }}'
+            fbkeyClientId: '{{ secret_vars.fbkey_client_id }}'
+            
 
             oauthCookieSecret: {{ secret_vars.oauth_cookiesecret }}
             kcClientIdK8s: {{ secret_vars.kc_clientid_k8s }}

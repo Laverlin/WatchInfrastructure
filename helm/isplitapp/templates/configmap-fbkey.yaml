@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: fbkey
+  namespace: {{ .Release.Namespace }}
+data:
+  allow-snippet-annotations: "false"
+  fbkey.json: |
+    {
+        "type": "service_account",
+        "project_id": "isplitapp",
+        "private_key_id": "{{ .Values.global.fbkeyPrivateKeyId }}",
+        "private_key": "{{ .Values.global.fbkeyPrivateKey }}",
+        "client_email": "{{ .Values.global.fbkeyClientEmail }}",
+        "client_id": "{{ .Values.global.fbkeyClientId }}",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/{{ .Values.global.fbkeyClientEmail | urlquery }}",
+        "universe_domain": "googleapis.com"
+    }

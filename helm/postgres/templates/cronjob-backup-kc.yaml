@@ -1,0 +1,62 @@
+# Midnight backup
+#
+
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "postgres.fullname" . }}-backup-kc
+  labels:
+    {{- include "postgres.labels" . | nindent 4 }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  schedule: "0 0 1 * *"
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 86000
+      backoffLimit: 0
+      template:
+        spec:
+          restartPolicy: Never
+          containers:
+            - name: {{ .Chart.Name }}-backup-kc
+              image: ilaverlin/pg-az-backup
+              env:
+                - name: POSTGRES_HOST
+                  value: {{ include "postgres.fullname" . }}
+                - name: POSTGRES_DATABASE
+                  value: {{ .Values.backupDatabaseKC }}
+                - name: POSTGRES_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "postgres.fullname" . }}
+                      key: PostgresUser
+                - name: POSTGRES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "postgres.fullname" . }}
+                      key: PostgresPassword
+                - name: AZURE_STORAGE_ACCOUNT
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "postgres.fullname" . }}
+                      key: azStorageAccount
+                - name: AZURE_SAS
+                  valueFrom:
+                    secretKeyRef:
+                      name: {{ include "postgres.fullname" . }}
+                      key: azSasToken
+                - name: AZURE_CONTAINER_NAME
+                  value: {{ .Values.backupContainerKC }}
+              volumeMounts:
+                - mountPath: "/etc/data"
+                  name: home-data
+          volumes:
+            - name: home-data
+              hostPath:
+                path: {{ .Values.global.storageRoot }}/pg-backup-kc
+                type: DirectoryOrCreate
+          initContainers:
+            - name: wait-postrges
+              image: ilaverlin/pg-client:latest
+              command: ['sh', '-c', "until pg_isready -h {{ include "postgres.fullname" . }} -p {{ .Values.service.port }}; do  echo waiting for {{ include "postgres.fullname" . }}; sleep 5; done"]

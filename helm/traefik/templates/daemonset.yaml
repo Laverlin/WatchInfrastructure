@@ -47,14 +47,14 @@ spec:
             - --entrypoints.web.http.redirections.entryPoint.scheme=https
             - --entrypoints.web.http.redirections.entrypoint.permanent=true
 
-            {{- if eq .Values.global.deployEnv "dev" }}
-            - --entryPoints.tcpptp.address=:{{ .Values.global.qbtPort }}
-            - --entryPoints.udpptp.address=:{{ .Values.global.qbtPort }}/udp
-            - --entryPoints.plex.address=:{{ .Values.global.plexPort }}
+            # {{- if eq .Values.global.deployEnv "dev" }}
+            # - --entryPoints.tcpptp.address=:{{ .Values.global.qbtPort }}
+            # - --entryPoints.udpptp.address=:{{ .Values.global.qbtPort }}/udp
+            # - --entryPoints.plex.address=:{{ .Values.global.plexPort }}
 
-            - --entryPoints.sync-tcp.address=:55555
-            - --entryPoints.sync-udp.address=:55555/udp
-            {{- end }}
+            # - --entryPoints.sync-tcp.address=:55555
+            # - --entryPoints.sync-udp.address=:55555/udp
+            # {{- end }}
 
             - --entryPoints.vpntcp.Address=:8443
             - --entryPoints.vpn-udp.Address=:8443/udp

@@ -34,3 +34,7 @@ service:
   nodePort: 30543
 
 backupDatabase: "WatchService"
+backupDatabaseKC: "keycloak"
+backupContainerKC: "pg-backup-kc"
+backupDatabaseGF: "grafana"
+backupContainerGF: "pg-backup-gf"

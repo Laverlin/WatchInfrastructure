@@ -70,11 +70,11 @@
     - name: Install containerd
       ansible.builtin.command: "{{ item }}"
       with_items: 
-        - wget https://github.com/containerd/containerd/releases/download/v1.6.12/containerd-1.6.12-linux-amd64.tar.gz
-        - tar Czxvf /usr/local containerd-1.6.12-linux-amd64.tar.gz
+        - wget https://github.com/containerd/containerd/releases/download/v2.0.2/containerd-2.0.2-linux-amd64.tar.gz
+        - tar Czxvf /usr/local containerd-2.0.2-linux-amd64.tar.gz
         - wget https://raw.githubusercontent.com/containerd/containerd/main/containerd.service
         - mv containerd.service /usr/lib/systemd/system/
-        - wget https://github.com/opencontainers/runc/releases/download/v1.1.1/runc.amd64
+        - wget https://github.com/opencontainers/runc/releases/download/v1.2.4/runc.amd64
         - install -m 755 runc.amd64 /usr/local/sbin/runc
       args:
         creates: /usr/local/sbin/runc
@@ -107,17 +107,30 @@
 
     ## Install kube* modules
     ##
-    - name: Add Google official GPG key
-      ansible.builtin.apt_key:
-        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-        state: present
+    # - name: Add Google official GPG key
+    #   ansible.builtin.apt_key:
+    #     url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+    #     state: present
 
-    - name: Add Kubernetes Repository
-      ansible.builtin.apt_repository:
-        repo: deb http://apt.kubernetes.io/ kubernetes-xenial main 
+    # - name: Add Kubernetes Repository 
+    #   ansible.builtin.apt_repository:
+    #     repo: deb http://apt.kubernetes.io/ kubernetes-xenial main 
+    #     state: present
+    #     filename: kubernetes
+    #     mode: 0600
+
+    - name: Add Kubernetes apt-key
+      get_url:
+        url: https://pkgs.k8s.io/core:/stable:/v1.32/deb/Release.key
+        dest: /etc/apt/keyrings/kubernetes-apt-keyring.asc
+        mode: "0644"
+        force: true
+
+    - name: Add Kubernetes APT repository
+      apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.32/deb/ /"
         state: present
-        filename: kubernetes
-        mode: 0600
+        update_cache: yes
 
     - name: Installing Kubernetes Cluster Packages.
       ansible.builtin.apt: 
